@@ -29,6 +29,7 @@ type Options struct {
 	FolderPath string // the shared folder on disk
 	FolderID   string // Syncthing folder ID, the same on every device
 	FolderName string // label shown in Syncthing
+	DeviceName string // how this computer appears to the others, e.g. "Ali's MacBook Air"
 }
 
 // Engine is a running, embedded Syncthing.
@@ -113,10 +114,10 @@ func prepare(cfg config.Wrapper, myID protocol.DeviceID, o Options) error {
 		if c.GUI.APIKey == "" {
 			c.GUI.APIKey = randomKey()
 		}
-		c.Options.StartBrowser = false         // Shared Hub is the UI
-		c.Options.URAccepted = -1              // don't ask about usage reporting
-		c.Options.AutoUpgradeIntervalH = 0     // updates ship with Shared Hub itself
-		c.Options.CREnabled = false            // no crash reports to third parties by default
+		c.Options.StartBrowser = false     // Shared Hub is the UI
+		c.Options.URAccepted = -1          // don't ask about usage reporting
+		c.Options.AutoUpgradeIntervalH = 0 // updates ship with Shared Hub itself
+		c.Options.CREnabled = false        // no crash reports to third parties by default
 
 		f, _, ok := c.Folder(o.FolderID)
 		if !ok {
@@ -130,6 +131,72 @@ func prepare(cfg config.Wrapper, myID protocol.DeviceID, o Options) error {
 		f.FSWatcherEnabled = true
 		f.FSWatcherDelayS = 1 // clipboard and notes should arrive in seconds, not ten
 		c.SetFolder(f)
+
+		// Replace Syncthing's default (the raw hostname) with the computer's friendly name.
+		if me, _, ok := c.Device(myID); ok && o.DeviceName != "" {
+			if host, _ := os.Hostname(); me.Name == "" || me.Name == host {
+				me.Name = o.DeviceName
+				c.SetDevice(me)
+			}
+		}
+	})
+	if err != nil {
+		return err
+	}
+	w.Wait()
+	return nil
+}
+
+// Name is this device's name as other devices see it.
+func (e *Engine) Name() string {
+	if d, ok := e.cfg.Device(e.ID); ok {
+		return d.Name
+	}
+	return ""
+}
+
+// AddPeer trusts a device and shares the folder with it. Syncthing then connects
+// on its own, over the local network or through relays.
+func (e *Engine) AddPeer(id protocol.DeviceID, name string) error {
+	w, err := e.cfg.Modify(func(c *config.Configuration) {
+		d, _, ok := c.Device(id)
+		if !ok {
+			d = c.Defaults.Device.Copy()
+			d.DeviceID = id
+			d.Addresses = []string{"dynamic"}
+		}
+		if name != "" {
+			d.Name = name
+		}
+		c.SetDevice(d)
+		if f, _, ok := c.Folder(e.FolderID); ok && !f.SharedWith(id) {
+			f.Devices = append(f.Devices, config.FolderDeviceConfiguration{DeviceID: id})
+			c.SetFolder(f)
+		}
+	})
+	if err != nil {
+		return err
+	}
+	w.Wait()
+	return nil
+}
+
+// RemovePeer stops sharing with a device and forgets it.
+func (e *Engine) RemovePeer(id protocol.DeviceID) error {
+	w, err := e.cfg.Modify(func(c *config.Configuration) {
+		if f, _, ok := c.Folder(e.FolderID); ok {
+			kept := f.Devices[:0]
+			for _, d := range f.Devices {
+				if d.DeviceID != id {
+					kept = append(kept, d)
+				}
+			}
+			f.Devices = kept
+			c.SetFolder(f)
+		}
+		if _, i, ok := c.Device(id); ok {
+			c.Devices = append(c.Devices[:i], c.Devices[i+1:]...)
+		}
 	})
 	if err != nil {
 		return err

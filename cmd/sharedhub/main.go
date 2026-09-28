@@ -40,6 +40,7 @@ func main() {
 		FolderPath: *folder,
 		FolderID:   "shared-hub",
 		FolderName: "Shared Hub",
+		DeviceName: hub.DisplayName(),
 	})
 	if err != nil {
 		slog.Error("Could not start sync engine", "error", err)

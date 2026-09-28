@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/sharedhub/shared-hub/internal/engine"
+	"github.com/sharedhub/shared-hub/internal/pairing"
 	"github.com/sharedhub/shared-hub/web"
 )
 
@@ -48,6 +49,7 @@ type Hub struct {
 	key                 string
 	build               string
 	eng                 *engine.Engine
+	beacon              *pairing.Beacon
 
 	mu    sync.Mutex
 	clips *store[clipDoc]
@@ -90,6 +92,7 @@ func New(c Config) (*Hub, error) {
 	full := c.Engine.ID.String()
 	h.clips.mine.Device, h.clips.mine.ID = h.device, full
 	h.notes.mine.Device, h.notes.mine.ID = h.device, full
+	h.beacon = pairing.Start(c.Engine.ID.String(), c.Engine.Name(), h.device)
 	go h.expiryLoop()
 	return h, nil
 }
@@ -270,6 +273,8 @@ func (h *Hub) route(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	case p == "/api/clips" || strings.HasPrefix(p, "/api/clips/"):
 		return h.clipsAPI(w, r)
+	case p == "/api/pair" || strings.HasPrefix(p, "/api/pair/") || p == "/api/devices/remove":
+		return h.pairAPI(w, r)
 	case p == "/api/notes" || strings.HasPrefix(p, "/api/notes/"):
 		return h.notesAPI(w, r)
 	case strings.HasPrefix(p, "/f/") && (m == http.MethodGet || m == http.MethodHead):

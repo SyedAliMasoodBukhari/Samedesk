@@ -404,4 +404,3 @@ func (h *Hub) toTrash(p string) error {
 	}
 	return moveFile(p, unique(filepath.Join(dir, filepath.Base(p))))
 }
-

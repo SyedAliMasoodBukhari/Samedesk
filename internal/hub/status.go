@@ -14,21 +14,24 @@ import (
 // Sync status comes from the embedded Syncthing's REST API on loopback.
 
 type Peer struct {
+	ID        string  `json:"id"`
 	Name      string  `json:"name"`
 	Label     string  `json:"label"`
 	Connected bool    `json:"connected"`
+	Shared    bool    `json:"shared"` // the other side accepted and shares the folder
 	Need      int     `json:"need"`
 	LastSeen  *string `json:"lastSeen"`
 }
 
 type SyncStatus struct {
-	OK        bool   `json:"ok"`
-	Reason    string `json:"reason,omitempty"`
-	State     string `json:"state,omitempty"`
-	Receiving int    `json:"receiving"`
-	Errors    int    `json:"errors"`
-	Peers     []Peer `json:"peers"`
-	Paused    bool   `json:"paused"`
+	OK        bool       `json:"ok"`
+	Reason    string     `json:"reason,omitempty"`
+	State     string     `json:"state,omitempty"`
+	Receiving int        `json:"receiving"`
+	Errors    int        `json:"errors"`
+	Peers     []Peer     `json:"peers"`
+	Pending   []PairPeer `json:"pending"` // devices asking to connect
+	Paused    bool       `json:"paused"`
 }
 
 type syncCache struct {
@@ -142,7 +145,10 @@ func (h *Hub) fetchStatus(labels map[string]string) (SyncStatus, error) {
 	}
 	peers := []Peer{}
 	for _, pid := range peerIDs {
-		var comp struct{ NeedItems, NeedDeletes int }
+		var comp struct {
+			NeedItems, NeedDeletes int
+			RemoteState            string `json:"remoteState"`
+		}
 		_ = h.st(fmt.Sprintf("/rest/db/completion?folder=%s&device=%s", fid, url.QueryEscape(pid)), &comp)
 		name := names[pid]
 		if name == "" {
@@ -153,7 +159,8 @@ func (h *Hub) fetchStatus(labels map[string]string) (SyncStatus, error) {
 		if id, err := protocol.DeviceIDFromString(pid); err == nil && labels[id.Short().String()] != "" {
 			label = labels[id.Short().String()]
 		}
-		p := Peer{Name: name, Label: label, Connected: conns.Connections[pid].Connected, Need: comp.NeedItems + comp.NeedDeletes}
+		p := Peer{ID: pid, Name: name, Label: label, Connected: conns.Connections[pid].Connected, Need: comp.NeedItems + comp.NeedDeletes,
+			Shared: comp.RemoteState == "valid"}
 		if seen := stats[pid].LastSeen; seen != "" && !strings.HasPrefix(seen, "1970") {
 			p.LastSeen = &seen
 		}
@@ -170,5 +177,5 @@ func (h *Hub) fetchStatus(labels map[string]string) (SyncStatus, error) {
 		}
 	}
 	return SyncStatus{OK: true, State: local.State, Receiving: local.NeedFiles, Errors: local.Errors + local.PullErrors,
-		Peers: peers, Paused: folder.Paused}, nil
+		Peers: peers, Pending: h.pending(), Paused: folder.Paused}, nil
 }

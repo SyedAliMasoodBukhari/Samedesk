@@ -2,7 +2,9 @@ package hub
 
 import (
 	"io/fs"
+	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -22,3 +24,14 @@ func reveal(p string) { _ = exec.Command("open", "-R", p).Start() }
 
 // OpenBrowser opens the dashboard in the default browser.
 func OpenBrowser(url string) { _ = exec.Command("open", url).Start() }
+
+// DisplayName is the computer's name as set in System Settings, e.g. "Ali's MacBook Air".
+func DisplayName() string {
+	if out, err := exec.Command("scutil", "--get", "ComputerName").Output(); err == nil {
+		if n := strings.TrimSpace(string(out)); n != "" {
+			return n
+		}
+	}
+	h, _ := os.Hostname()
+	return strings.TrimSuffix(h, ".local")
+}

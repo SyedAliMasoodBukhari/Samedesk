@@ -346,6 +346,51 @@ kbd{font:500 11px var(--sans);padding:1px 5px;border:1px solid var(--line-2);bor
 .p-row span i:first-child{width:80%;background:#c9ced6}
 .p-bar{margin-top:auto;height:3px;width:44px;border-radius:2px;background:#111318;align-self:center;opacity:.8}
 
+/* ---------- pairing ---------- */
+.sdev.add{color:var(--muted);font-size:12.5px;width:100%;margin-top:2px}
+.sdev.add:hover{color:var(--ink)}
+.sdev.add svg{width:14px;height:14px}
+.pair-wrap{position:fixed;inset:0;z-index:88;background:var(--overlay);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:grid;place-items:center;padding:20px;animation:fade .14s}
+.pair{width:min(520px,100%);max-height:calc(100vh - 40px);overflow:auto;background:var(--raised);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow-lg);animation:pop .18s cubic-bezier(.2,.8,.2,1)}
+.pair-h{display:flex;align-items:flex-start;gap:12px;padding:22px 22px 6px}
+.pair-h h3{margin:0;font-size:17px;font-weight:600;letter-spacing:-.015em}
+.pair-h p{margin:3px 0 0;color:var(--muted);font-size:13px;line-height:1.5}
+.pair-b{padding:14px 22px 22px}
+.pair-label{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:6px 0 10px}
+.pair-label .pulse{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:breathe 1.4s ease-in-out infinite}
+.near{display:flex;flex-direction:column;gap:8px}
+.near-i{display:flex;align-items:center;gap:14px;padding:12px 12px 12px 14px;border:1px solid var(--line);border-radius:13px;background:var(--panel);animation:pop .2s}
+.near-i .dev3d{width:38px;height:38px;flex:none;display:grid;place-items:center;color:var(--ink-2)}
+.near-i b{display:block;font-weight:550}
+.near-i small{display:block;color:var(--muted);font-size:12px}
+.near-empty{border:1px dashed var(--line-2);border-radius:13px;padding:18px;display:flex;gap:14px;align-items:center;color:var(--muted);font-size:13px;line-height:1.5}
+.near-empty .ghost{width:38px;height:38px;border-radius:11px;background:var(--hover);flex:none;position:relative;overflow:hidden}
+.near-empty .ghost:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);animation:sweep 1.6s infinite}
+[data-theme=dark] .near-empty .ghost:after{background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent)}
+@keyframes sweep{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+.or{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:12px;margin:22px 0 16px}
+.or:before,.or:after{content:"";flex:1;border-top:1px solid var(--line)}
+.codebox{display:flex;align-items:center;gap:10px;padding:10px 10px 10px 14px;border:1px solid var(--line);border-radius:11px;background:var(--hover)}
+.codebox code{flex:1;min-width:0;font:12px/1.5 var(--mono);color:var(--ink-2);word-break:break-all}
+.paste{display:flex;gap:8px;margin-top:10px}
+.paste input{flex:1;min-width:0;height:36px;padding:0 12px;border:1px solid var(--line-2);border-radius:10px;background:var(--panel);outline:0;font:12px var(--mono);color:var(--ink)}
+.paste input:focus{border-color:var(--accent-line);box-shadow:0 0 0 4px var(--accent-soft)}
+.paste input::placeholder{font-family:var(--sans);font-size:13px;color:var(--muted)}
+.pair-err{color:var(--danger);font-size:12.5px;margin-top:8px}
+.wait{text-align:center;padding:10px 6px 4px}
+.link-anim{display:flex;align-items:center;justify-content:center;gap:14px;margin:6px 0 18px}
+.link-anim .dev3d{width:52px;height:52px;display:grid;place-items:center;color:var(--ink-2)}
+.link-anim .dev3d svg{width:30px;height:30px}
+.link-anim .wire{width:70px;height:2px;border-radius:2px;background:repeating-linear-gradient(90deg,var(--line-2) 0 6px,transparent 6px 12px);position:relative;overflow:hidden}
+.link-anim .wire:after{content:"";position:absolute;top:0;left:-30%;width:30%;height:100%;background:var(--accent);border-radius:2px;animation:travel 1.3s ease-in-out infinite}
+.link-anim.done .wire{background:var(--ok)}
+.link-anim.done .wire:after{display:none}
+@keyframes travel{to{left:100%}}
+.wait h4{margin:0 0 6px;font-size:16px;font-weight:600}
+.wait p{margin:0 auto;color:var(--muted);font-size:13px;line-height:1.55;max-width:360px}
+.verify{font:600 30px/1 var(--sans);letter-spacing:.14em;font-variant-numeric:tabular-nums;margin:16px 0 4px;color:var(--ink)}
+.pair-f{display:flex;justify-content:flex-end;gap:8px;margin-top:22px}
+
 /* ---------- overlays ---------- */
 .dlg-wrap{position:fixed;inset:0;z-index:92;background:var(--overlay);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:grid;place-items:center;padding:20px;animation:fade .12s}
 .dlg{width:min(400px,100%);background:var(--raised);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg);padding:22px 22px 18px;animation:pop .16s cubic-bezier(.2,.8,.2,1)}
@@ -469,6 +514,7 @@ kbd{font:500 11px var(--sans);padding:1px 5px;border:1px solid var(--line-2);bor
     <a class="nav" href="#notes" data-page="notes"><span data-i="note"></span>Notes</a>
     <div class="side-label">Devices</div>
     <div id="sideDevices"></div>
+    <button class="sdev add" id="addDeviceSide"><span data-i="plus"></span><span>Add a device</span></button>
     <div class="spacer"></div>
     <a class="nav" href="#settings" data-page="settings"><span data-i="settings"></span>Settings</a>
     <button class="nav" id="helpBtn"><span data-i="help"></span>Help</button>
@@ -571,7 +617,7 @@ kbd{font:500 11px var(--sans);padding:1px 5px;border:1px solid var(--line-2);bor
             </div>
             <div class="card"><div class="card-h"><h2>More actions</h2></div><div class="mlist" id="moreActions"></div></div>
           </div>
-          <div class="card"><div class="card-h"><h2>Devices</h2><span class="aside" id="syncAside"></span></div><div id="devRows"></div></div>
+          <div class="card"><div class="card-h"><h2>Devices</h2><span class="aside" id="syncAside"></span><button class="btn" id="addDeviceSet" style="margin-left:10px"><span data-i="plus"></span>Add a device</button></div><div id="devRows"></div></div>
           <div class="card" id="phoneCard"></div>
         </div>
       </section>
@@ -604,6 +650,7 @@ const I = {
   settings: svg('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'),
   help: svg('<circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.4a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.1-2.4 3.6M12 16.6h.01"/>'),
   plus: svg('<path d="M12 5v14M5 12h14"/>'),
+  devices: svg('<rect x="3" y="5" width="13" height="9" rx="1.5"/><path d="M1.5 17h16"/><rect x="18" y="8" width="4.5" height="10" rx="1.2"/>'),
   mac: svg('<rect x="4" y="5" width="16" height="11" rx="1.5"/><path d="M2 19h20"/>'),
   windows: svg('<rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/>'),
   linux: svg('<rect x="3" y="4" width="18" height="13" rx="2"/><path d="M7 9l2.5 2L7 13M12 13h4M8 20h8"/>'),
@@ -810,8 +857,9 @@ function devices() {
   const s = syncData, rows = [{name: me.host, sub: me.local ? 'This device' : 'Serving this page', cls: online ? 'ok' : 'bad', state: online ? 'Online' : 'Offline'}];
   if (s?.ok) for (const p of s.peers) {
     const seen = p.lastSeen ? `Last seen ${dateTime(Date.parse(p.lastSeen)).replace(/^Today, /, 'today ').replace(/^Yesterday, /, 'yesterday ')}` : 'Not seen yet';
-    rows.push({name: p.label, full: p.name, sub: p.connected ? (p.need ? `Syncing ${p.need} items` : 'Up to date') : `Offline${p.need ? ` · ${p.need} waiting` : ''}`, detail: p.connected ? '' : seen,
-               cls: p.connected ? (p.need ? 'busy' : 'ok') : '', state: p.connected ? 'Online' : 'Offline'});
+    const waiting = !p.shared && (p.connected || !p.lastSeen);   // we added it; it hasn't accepted yet
+    rows.push({id: p.id, name: p.label, full: p.name, sub: waiting ? 'Waiting for it to accept' : p.connected ? (p.need ? `Syncing ${p.need} items` : 'Up to date') : `Offline${p.need ? ` · ${p.need} waiting` : ''}`,
+               detail: p.connected || waiting ? '' : seen, cls: waiting ? '' : p.connected ? (p.need ? 'busy' : 'ok') : '', state: waiting ? 'Pending' : p.connected ? 'Online' : 'Offline'});
   }
   if (!me.local) rows.push({name: me.device, sub: 'You, right now', cls: 'ok', state: 'Online'});
   return rows;
@@ -830,7 +878,8 @@ function renderSettings() {
   const [cls, text] = syncState();
   $('#syncAside').innerHTML = `<i class="dot ${cls}"></i>${esc(text)}`;
   $('#devRows').innerHTML = devices().map(r => `<div class="devrow"><span class="dev3d">${dev3d(r.name)}</span><div><b>${esc(r.name)}${r.full && r.full !== r.name ? ` <span style="color:var(--muted);font-weight:400;font-size:12px">${esc(r.full)}</span>` : ''}</b><small>${esc([r.sub, r.detail].filter(Boolean).join(' · '))}</small></div>
-    <span class="state"><i class="dot ${r.cls}"></i>${r.state}</span></div>`).join('');
+    <span class="state"><i class="dot ${r.cls}"></i>${r.state}</span>${r.id && me.local ? `<button class="icon" data-dev="${esc(r.id)}" data-menu title="More">${I.more}</button>` : ''}</div>`).join('') +
+    (devices().length < 2 ? `<div class="empty" style="padding:22px 16px 26px"><p>Add your other computer to start syncing the clipboard, files and notes.</p><button class="btn primary" style="margin-top:14px" onclick="openPair()">${I.plus}Add a device</button></div>` : '');
   if (!$('#phoneCard').dataset.done) {
     $('#phoneCard').dataset.done = 1;
     $('#phoneCard').innerHTML = me.link ? `<div class="phone-card"><div class="qr" id="qr"></div>
@@ -852,7 +901,15 @@ function renderSettings() {
     if (me.local) $('#actReveal').onclick = () => post('/api/reveal', {path: ''});
   }
 }
-async function loadSync() { try { syncData = await api('/api/sync'); } catch {} renderDevices(); if (clipState.version) { renderHomeClips(); if (page === 'clipboard') renderDetail(); } }
+$('#devRows').addEventListener('click', e => {
+  const b = e.target.closest('[data-dev]'); if (!b) return;
+  e.stopPropagation();
+  const p = syncData?.peers?.find(x => x.id === b.dataset.dev); if (!p) return;
+  openMenu(b, [{icon: I.trash, label: 'Remove device', danger: true, confirm: {title: `Remove ${p.label}?`, action: 'Remove device',
+      body: `It stops syncing with this computer. Everything already on ${p.label} stays there.`, preview: prevLine(dev3d(p.label), p.name)},
+    run: async () => { prompted.add(p.id); await post('/api/devices/remove', {id: p.id}); toast(`Removed ${p.label}`, I.trash); loadSync(); }}]);
+});
+async function loadSync() { try { syncData = await api('/api/sync'); } catch {} renderDevices(); renderHero(); checkPending(); if (clipState.version) { renderHomeClips(); if (page === 'clipboard') renderDetail(); } }
 let qrLib;
 function drawQR() {
   qrLib ||= new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js'; s.onload = res; s.onerror = rej; document.head.append(s); });
@@ -988,6 +1045,13 @@ $('#qaUpload').onclick = () => { location.hash = 'files'; setTimeout(() => $('#f
 const incoming = () => clipState.clips.filter(isIncoming).slice(0, 3);
 function renderHero() {
   const list = incoming(), el = $('#hero'), p = peer();
+  if (!list.length && syncData?.ok && !syncData.peers.length) {
+    el.innerHTML = `<div class="hero-top">${I.devices || I.mac}<span>Your devices</span></div>
+      <div class="empty" style="padding:22px 8px 10px"><div class="art">${dev3d(me.host)}</div><h3>Add your other computer</h3>
+      <p>Pair it once and anything you copy, drop or write here shows up there moments later.</p>
+      <button class="btn primary lg" style="margin-top:16px" onclick="openPair()">${I.plus}Add a device</button></div>`;
+    return;
+  }
   if (!list.length) {
     el.innerHTML = `<div class="hero-top">${I.clock}<span>Latest from ${esc(p?.label || 'your other devices')}</span></div>
       <div class="empty" style="padding:26px 8px 12px"><div class="art">${A('inbox')}</div><h3>Nothing received yet</h3><p>When you send something from ${esc(p?.label || 'another device')}, it appears here, ready to copy.</p></div>`;
@@ -1377,6 +1441,122 @@ function markPal() { $$('.pal-i').forEach(b => b.classList.toggle('on', +b.datas
 function runPal(i) { const it = pal?.items[i]; if (!it) return; closePalette(); it.run(); }
 $('#searchBtn').onclick = openPalette;
 
+/* ---------- pairing ---------- */
+let pairUI = null;
+const osOf = n => ['Mac', 'Windows', 'Linux'].includes(n) ? n : '';
+async function openPair() {
+  if (pairUI || !me.local) return;
+  closeMenus();
+  const w = document.createElement('div'); w.className = 'pair-wrap';
+  w.innerHTML = `<div class="pair" role="dialog" aria-modal="true" aria-labelledby="pairT"></div>`;
+  document.body.append(w);
+  pairUI = {el: w, step: 'find', target: null, err: ''};
+  w.onclick = e => { if (e.target === w) closePair(); };
+  try { pairUI.st = await post('/api/pair/start', {}); } catch { pairUI.st = null; }
+  renderPair();
+  pairUI.timer = setInterval(pollPair, 1200);
+}
+async function closePair() {
+  if (!pairUI) return;
+  clearInterval(pairUI.timer); pairUI.el.remove();
+  const t = pairUI; pairUI = null;
+  post('/api/pair/stop', {}).catch(() => {});
+  if (t.step === 'done') loadSync();
+}
+async function pollPair() {
+  if (!pairUI) return;
+  try {
+    pairUI.st = await api('/api/pair');
+    if (pairUI.step === 'wait') {
+      syncData = await api('/api/sync');
+      const p = syncData.peers?.find(x => x.id === pairUI.target.id);
+      if (p?.connected && p.shared) { pairUI.step = 'done'; pairUI.target.label = p.label; renderDevices(); }   // accepted, not just reachable
+    }
+  } catch {}
+  renderPair();
+}
+function nearHTML(st) {
+  if (!st?.available) return `<div class="near-empty"><span class="ghost"></span><span>Finding devices on this network isn't available on this computer. Use a code below.</span></div>`;
+  const list = st.nearby || [];
+  if (!list.length) return `<div class="near-empty"><span class="ghost"></span><span>On your other computer, open Shared Hub and choose <b style="color:var(--ink-2);font-weight:550">Add a device</b>. It appears here.</span></div>`;
+  return `<div class="near">${list.map(n => `<div class="near-i"><span class="dev3d">${dev3d(n.os)}</span><div style="flex:1;min-width:0"><b>${esc(n.name)}</b><small>${esc([n.os, n.addr].filter(Boolean).join(' · '))}</small></div>
+    ${n.paired ? `<span style="color:var(--ok);font-size:12.5px;display:flex;gap:5px;align-items:center">${I.check}Paired</span>` : `<button class="btn primary" data-pair="${esc(n.id)}">Pair</button>`}</div>`).join('')}</div>`;
+}
+function renderPair() {
+  if (!pairUI) return;
+  const box = pairUI.el.querySelector('.pair'), st = pairUI.st, t = pairUI.target;
+  if (pairUI.step === 'find') {
+    const focused = document.activeElement?.id === 'pairCode', val = $('#pairCode')?.value || '';
+    box.innerHTML = `<div class="pair-h"><div style="flex:1"><h3 id="pairT">Add a device</h3><p>Pair another computer once. After that, everything syncs by itself.</p></div><button class="icon" data-x title="Close">${I.x}</button></div>
+      <div class="pair-b">
+        <div class="pair-label"><span class="pulse"></span>On this network</div>
+        ${nearHTML(st)}
+        <div class="or">Or connect with a code</div>
+        <div class="pair-label" style="margin-top:0">This device's code</div>
+        <div class="codebox"><code>${esc(st?.me?.id || '…')}</code><button class="btn" data-copy>${I.copy}Copy</button></div>
+        <div class="paste"><input id="pairCode" placeholder="Paste the other device's code" autocomplete="off" spellcheck="false"><button class="btn primary" data-connect>Connect</button></div>
+        ${pairUI.err ? `<div class="pair-err">${esc(pairUI.err)}</div>` : ''}
+      </div>`;
+    const inp = $('#pairCode'); inp.value = val; if (focused) { inp.focus(); inp.setSelectionRange(val.length, val.length); }
+    inp.onkeydown = e => { if (e.key === 'Enter') box.querySelector('[data-connect]').click(); };
+  } else {
+    const done = pairUI.step === 'done', name = t.label || t.name || 'the other device';
+    box.innerHTML = `<div class="pair-h"><div style="flex:1"><h3 id="pairT">${done ? "You're connected" : 'Waiting for ' + esc(name)}</h3></div><button class="icon" data-x title="Close">${I.x}</button></div>
+      <div class="pair-b"><div class="wait">
+        <div class="link-anim${done ? ' done' : ''}"><span class="dev3d">${dev3d(me.host)}</span><span class="wire"></span><span class="dev3d">${dev3d(osOf(t.os) || osOf(t.label))}</span></div>
+        ${done ? `<h4>${esc(pairUI.st?.me?.name || me.host)} and ${esc(name)} are paired</h4><p>Clipboard, files and notes now sync between them, on this network or over the internet.</p>`
+          : `<h4>Accept the request on ${esc(name)}</h4><p>Check that it shows the same code:</p><div class="verify">${esc(t.verify)}</div><p style="font-size:12px">If the codes don't match, cancel.</p>`}
+      </div>
+      <div class="pair-f">${done ? `<button class="btn primary lg" data-x>Done</button>` : `<button class="btn lg" data-cancel>Cancel</button>`}</div></div>`;
+  }
+}
+document.addEventListener('click', async e => {
+  if (!pairUI || !e.target.closest('.pair')) return;
+  const el = e.target.closest('[data-x],[data-copy],[data-connect],[data-pair],[data-cancel]'); if (!el) return;
+  if (el.hasAttribute('data-x')) return closePair();
+  if (el.hasAttribute('data-copy')) { if (await copyText(pairUI.st?.me?.id || '')) flashButton(el, 'Copied'); return; }
+  if (el.hasAttribute('data-cancel')) { const id = pairUI.target?.id; pairUI.step = 'find'; pairUI.target = null; renderPair(); if (id) post('/api/devices/remove', {id}).catch(() => {}); return; }
+  const id = el.dataset.pair || $('#pairCode')?.value.trim();
+  if (!id) { pairUI.err = 'Paste the code shown on the other device first.'; return renderPair(); }
+  try {
+    const r = await post('/api/pair/connect', {id});
+    const n = (pairUI.st?.nearby || []).find(x => x.id === r.id);
+    pairUI.err = ''; pairUI.step = 'wait'; pairUI.target = {id: r.id, name: r.name || n?.name, os: n?.os, verify: r.verify};
+    renderPair();
+  } catch (err) { pairUI.err = err.message; renderPair(); }
+});
+['#addDeviceSide', '#addDeviceSet'].forEach(s => $(s).onclick = openPair);
+
+// A device asking to connect: show who it is and the check code; the user decides.
+const prompted = new Set();
+async function checkPending() {
+  const list = (syncData?.pending || []).filter(p => !prompted.has(p.id));
+  if (!list.length || !me.local || dlgOpen) return;
+  const p = list[0]; prompted.add(p.id);
+  const ok = await requestDialog(p);
+  try {
+    await post(ok ? '/api/pair/accept' : '/api/pair/decline', {id: p.id});
+    if (ok) { toast(`Connected to ${p.name || 'your device'}`); if (pairUI) { pairUI.step = 'done'; pairUI.target = {id: p.id, name: p.name, verify: p.verify}; renderPair(); } }
+  } catch (err) { toast(err.message, I.alert, true); }
+  loadSync();
+}
+function requestDialog(p) {
+  return new Promise(resolve => {
+    dlgOpen = true;
+    const w = document.createElement('div'); w.className = 'dlg-wrap';
+    w.innerHTML = `<div class="dlg" role="alertdialog" aria-modal="true" aria-labelledby="reqT" style="text-align:center">
+      <div class="link-anim" style="margin-top:4px"><span class="dev3d">${dev3d(me.host)}</span><span class="wire"></span><span class="dev3d">${osOf(p.os) ? dev3d(p.os) : I.devices}</span></div>
+      <h3 id="reqT">${esc(p.name || 'A device')} wants to connect</h3>
+      <p>Accept only if you started pairing on that device and it shows this code:</p>
+      <div class="verify">${esc(p.verify)}</div>
+      <p style="font-size:12px">${p.addr ? 'From ' + esc(p.addr.replace(/^\w+:\/\//, '').replace(/:\d+$/, '')) : ''}</p>
+      <div class="dlg-acts" style="justify-content:center"><button class="btn lg" data-r="">Decline</button><button class="btn lg primary" data-r="1">Accept</button></div></div>`;
+    const done = ok => { w.remove(); dlgOpen = false; resolve(ok); };
+    w.onclick = e => { const b = e.target.closest('[data-r]'); if (b) done(!!b.dataset.r); };
+    document.body.append(w); w.querySelector('.primary').focus();
+  });
+}
+
 /* ---------- drop anywhere ---------- */
 let dz = null, dzT;
 function showDropzone() {
@@ -1461,6 +1641,7 @@ $('#helpBtn').onclick = e => {
 };
 document.addEventListener('keydown', e => {
   if (dlgOpen) return;
+  if (pairUI) { if (e.key === 'Escape') closePair(); return; }
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); pal ? closePalette() : openPalette(); return; }
   if (pal) return;
   if (pv) { if (e.key === 'Escape') closePreview(); if (e.key === 'ArrowLeft') step(-1); if (e.key === 'ArrowRight') step(1); return; }

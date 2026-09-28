@@ -40,3 +40,9 @@ func reveal(p string) { _ = exec.Command("explorer", "/select,", p).Start() }
 func OpenBrowser(url string) {
 	_ = noWindow(exec.Command("rundll32", "url.dll,FileProtocolHandler", url)).Start()
 }
+
+// DisplayName is the PC's name.
+func DisplayName() string {
+	h, _ := os.Hostname()
+	return h
+}

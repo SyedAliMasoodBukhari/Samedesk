@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -47,3 +48,14 @@ func reveal(p string) {
 
 // OpenBrowser opens the dashboard in the default browser.
 func OpenBrowser(url string) { _ = exec.Command("xdg-open", url).Start() }
+
+// DisplayName is the machine's pretty hostname when set, else its hostname.
+func DisplayName() string {
+	if out, err := exec.Command("hostnamectl", "--pretty").Output(); err == nil {
+		if n := strings.TrimSpace(string(out)); n != "" {
+			return n
+		}
+	}
+	h, _ := os.Hostname()
+	return h
+}
