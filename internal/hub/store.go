@@ -161,6 +161,7 @@ type Note struct {
 	Body      string `json:"body"`
 	Updated   int64  `json:"updated"`
 	By        string `json:"by"`
+	ByID      string `json:"byId,omitempty"` // who edited last, e.g. "BAFDLNP"
 	Created   int64  `json:"created"`
 	CreatedBy string `json:"createdBy"`
 }

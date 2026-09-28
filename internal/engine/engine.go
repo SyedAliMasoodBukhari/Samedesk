@@ -30,6 +30,7 @@ type Options struct {
 	FolderID   string // Syncthing folder ID, the same on every device
 	FolderName string // label shown in Syncthing
 	DeviceName string // how this computer appears to the others, e.g. "Ali's MacBook Air"
+	ForceName  bool   // apply DeviceName even if the device was already named
 }
 
 // Engine is a running, embedded Syncthing.
@@ -134,7 +135,7 @@ func prepare(cfg config.Wrapper, myID protocol.DeviceID, o Options) error {
 
 		// Replace Syncthing's default (the raw hostname) with the computer's friendly name.
 		if me, _, ok := c.Device(myID); ok && o.DeviceName != "" {
-			if host, _ := os.Hostname(); me.Name == "" || me.Name == host {
+			if host, _ := os.Hostname(); me.Name == "" || me.Name == host || o.ForceName {
 				me.Name = o.DeviceName
 				c.SetDevice(me)
 			}

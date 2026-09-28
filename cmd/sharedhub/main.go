@@ -23,6 +23,7 @@ func main() {
 	folder := flag.String("folder", filepath.Join(home, "Shared Hub"), "the shared folder")
 	port := flag.Int("port", 8765, "dashboard port")
 	openUI := flag.Bool("open", true, "open the dashboard in a browser on start")
+	name := flag.String("name", "", "how this device appears to others (default: the computer's name)")
 	flag.Parse()
 
 	// Bind the dashboard port first: it doubles as the "already running" check.
@@ -40,7 +41,8 @@ func main() {
 		FolderPath: *folder,
 		FolderID:   "shared-hub",
 		FolderName: "Shared Hub",
-		DeviceName: hub.DisplayName(),
+		DeviceName: firstNonEmpty(*name, hub.DisplayName()),
+		ForceName:  *name != "",
 	})
 	if err != nil {
 		slog.Error("Could not start sync engine", "error", err)
@@ -71,4 +73,13 @@ func main() {
 	slog.Info("Shutting down")
 	_ = srv.Close()
 	eng.Stop()
+}
+
+func firstNonEmpty(s ...string) string {
+	for _, v := range s {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
 }

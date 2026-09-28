@@ -154,8 +154,8 @@ kbd{font:500 11px var(--sans);padding:1px 5px;border:1px solid var(--line-2);bor
 
 /* ---------- home ---------- */
 .qa{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 0}
-.home-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;margin-top:16px;align-items:start}
-.hero{padding:18px 20px 18px;position:relative}
+.home-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;margin-top:16px;align-items:stretch}
+.hero{padding:18px 20px 18px;position:relative;display:flex;flex-direction:column}
 .hero .hover-acts{top:12px;right:12px}
 .hero-top{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12.5px}
 .hero-top .who{display:inline-flex;align-items:center;gap:6px;color:var(--accent);font-weight:600}
@@ -163,11 +163,11 @@ kbd{font:500 11px var(--sans);padding:1px 5px;border:1px solid var(--line-2);bor
 .hero-body{display:flex;gap:18px;align-items:flex-start;margin-top:14px}
 .hero-text{flex:1;min-width:0}
 .hero-title{font-size:17px;font-weight:600;letter-spacing:-.018em;line-height:1.4;margin:0 0 6px;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
-.hero-excerpt{color:var(--ink-2);margin:0;white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.hero-excerpt{color:var(--ink-2);margin:0;white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:6;overflow:hidden;line-height:1.6}
 .hero-art{width:72px;height:72px;flex:none}
 .hero-art.img{width:150px;height:104px;border-radius:10px;overflow:hidden;border:1px solid var(--line);cursor:zoom-in}
 .hero-art img{width:100%;height:100%;object-fit:cover}
-.hero-acts{display:flex;align-items:center;gap:8px;margin-top:18px}
+.hero-acts{display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:18px}
 .dots{display:flex;gap:5px;margin-left:auto}
 .dots button{width:6px;height:6px;border-radius:99px;background:var(--line-2);transition:all .25s}
 .dots button.on{width:16px;background:var(--ink-2)}
@@ -709,7 +709,8 @@ let cwd = '', fileMode = 'browse', lastFiles = '', fileItems = [], myUploads = n
 let prevSeen = +store.get('hub.seen') || Date.now();
 const canReadClipboard = () => window.isSecureContext && !!navigator.clipboard?.readText;
 const peer = () => syncData?.ok ? syncData.peers[0] : null;
-const peerName = () => peer()?.label || 'your other devices';
+const pn = p => p?.name || p?.label || '';                     // a device's own name, e.g. "Office PC"
+const peerName = () => pn(peer()) || 'your other devices';
 const apple = () => ['Mac', 'iPhone', 'iPad'].includes(me.device);
 const fm = () => me.host === 'Windows' ? 'Explorer' : me.host === 'Mac' ? 'Finder' : 'Files';
 
@@ -815,7 +816,7 @@ function route() {
   if (page === 'notes') renderNotes();
   if (page === 'settings') renderSettings();
 }
-addEventListener('hashchange', route);
+addEventListener('hashchange', () => { if (location.hash === '#add-device') { history.replaceState(null, '', '#home'); route(); openPair(); } else route(); });
 $('#tabbar').onclick = e => { const b = e.target.closest('button'); if (b) location.hash = b.dataset.page; };
 
 /* ---------- menus ---------- */
@@ -850,15 +851,15 @@ function syncState() {
   if (s.errors) return ['bad', 'Sync errors'];
   if (s.receiving || s.peers.some(p => p.connected && p.need) || (s.state && s.state !== 'idle')) return ['busy', 'Syncing…'];
   const off = s.peers.filter(p => !p.connected);
-  if (off.length && off.length === s.peers.length) return ['', off.some(p => p.need) ? `Waiting for ${off[0].label}` : `${off[0].label} offline`];
+  if (off.length && off.length === s.peers.length) return ['', off.some(p => p.need) ? `Waiting for ${pn(off[0])}` : `${pn(off[0])} offline`];
   return ['ok', 'Up to date'];
 }
 function devices() {
-  const s = syncData, rows = [{name: me.host, sub: me.local ? 'This device' : 'Serving this page', cls: online ? 'ok' : 'bad', state: online ? 'Online' : 'Offline'}];
+  const s = syncData, rows = [{name: me.name || me.host, kind: me.host, sub: me.local ? 'This device' : 'Serving this page', cls: online ? 'ok' : 'bad', state: online ? 'Online' : 'Offline'}];
   if (s?.ok) for (const p of s.peers) {
     const seen = p.lastSeen ? `Last seen ${dateTime(Date.parse(p.lastSeen)).replace(/^Today, /, 'today ').replace(/^Yesterday, /, 'yesterday ')}` : 'Not seen yet';
     const waiting = !p.shared && (p.connected || !p.lastSeen);   // we added it; it hasn't accepted yet
-    rows.push({id: p.id, name: p.label, full: p.name, sub: waiting ? 'Waiting for it to accept' : p.connected ? (p.need ? `Syncing ${p.need} items` : 'Up to date') : `Offline${p.need ? ` · ${p.need} waiting` : ''}`,
+    rows.push({id: p.id, name: pn(p), kind: p.label, full: osOf(p.label), sub: waiting ? 'Waiting for it to accept' : p.connected ? (p.need ? `Syncing ${p.need} items` : 'Up to date') : `Offline${p.need ? ` · ${p.need} waiting` : ''}`,
                detail: p.connected || waiting ? '' : seen, cls: waiting ? '' : p.connected ? (p.need ? 'busy' : 'ok') : '', state: waiting ? 'Pending' : p.connected ? 'Online' : 'Offline'});
   }
   if (!me.local) rows.push({name: me.device, sub: 'You, right now', cls: 'ok', state: 'Online'});
@@ -870,14 +871,14 @@ function renderDevices() {
   const [cls] = syncState(); $('#mDot').className = 'dot ' + cls;
   const p = peer();
   const narrow = matchMedia('(max-width:760px)').matches;
-  $$('[data-sendbar] textarea').forEach(t => t.placeholder = p ? (narrow ? `Send to ${p.label}…` : `Type or paste to send to ${p.label}…`) : 'Type or paste to send…');
-  $('#homeSub').textContent = p && !p.connected ? `${p.label} is offline. Anything you send reaches it when it's back.` : "Here's what's happening across your devices.";
+  $$('[data-sendbar] textarea').forEach(t => t.placeholder = p ? (narrow ? `Send to ${pn(p)}…` : `Type or paste to send to ${pn(p)}…`) : 'Type or paste to send…');
+  $('#homeSub').textContent = p && !p.connected ? `${pn(p)} is offline. Anything you send reaches it when it's back.` : "Here's what's happening across your devices.";
   if (page === 'settings') renderSettings();
 }
 function renderSettings() {
   const [cls, text] = syncState();
   $('#syncAside').innerHTML = `<i class="dot ${cls}"></i>${esc(text)}`;
-  $('#devRows').innerHTML = devices().map(r => `<div class="devrow"><span class="dev3d">${dev3d(r.name)}</span><div><b>${esc(r.name)}${r.full && r.full !== r.name ? ` <span style="color:var(--muted);font-weight:400;font-size:12px">${esc(r.full)}</span>` : ''}</b><small>${esc([r.sub, r.detail].filter(Boolean).join(' · '))}</small></div>
+  $('#devRows').innerHTML = devices().map(r => `<div class="devrow"><span class="dev3d">${dev3d(r.kind)}</span><div><b>${esc(r.name)}${r.full && r.full !== r.name ? ` <span style="color:var(--muted);font-weight:400;font-size:12px">${esc(r.full)}</span>` : ''}</b><small>${esc([r.sub, r.detail].filter(Boolean).join(' · '))}</small></div>
     <span class="state"><i class="dot ${r.cls}"></i>${r.state}</span>${r.id && me.local ? `<button class="icon" data-dev="${esc(r.id)}" data-menu title="More">${I.more}</button>` : ''}</div>`).join('') +
     (devices().length < 2 ? `<div class="empty" style="padding:22px 16px 26px"><p>Add your other computer to start syncing the clipboard, files and notes.</p><button class="btn primary" style="margin-top:14px" onclick="openPair()">${I.plus}Add a device</button></div>` : '');
   if (!$('#phoneCard').dataset.done) {
@@ -905,11 +906,11 @@ $('#devRows').addEventListener('click', e => {
   const b = e.target.closest('[data-dev]'); if (!b) return;
   e.stopPropagation();
   const p = syncData?.peers?.find(x => x.id === b.dataset.dev); if (!p) return;
-  openMenu(b, [{icon: I.trash, label: 'Remove device', danger: true, confirm: {title: `Remove ${p.label}?`, action: 'Remove device',
-      body: `It stops syncing with this computer. Everything already on ${p.label} stays there.`, preview: prevLine(dev3d(p.label), p.name)},
-    run: async () => { prompted.add(p.id); await post('/api/devices/remove', {id: p.id}); toast(`Removed ${p.label}`, I.trash); loadSync(); }}]);
+  openMenu(b, [{icon: I.trash, label: 'Remove device', danger: true, confirm: {title: `Remove ${pn(p)}?`, action: 'Remove device',
+      body: `It stops syncing with this computer. Everything already on ${pn(p)} stays there.`, preview: prevLine(dev3d(p.label), pn(p))},
+    run: async () => { prompted.add(p.id); await post('/api/devices/remove', {id: p.id}); toast(`Removed ${pn(p)}`, I.trash); loadSync(); }}]);
 });
-async function loadSync() { try { syncData = await api('/api/sync'); } catch {} renderDevices(); renderHero(); checkPending(); if (clipState.version) { renderHomeClips(); if (page === 'clipboard') renderDetail(); } }
+async function loadSync() { try { syncData = await api('/api/sync'); } catch {} renderDevices(); renderHero(); checkPending(); if (clipState.version) { renderHomeClips(); if (page === 'clipboard') renderClips(); } if (page === 'notes' && !noteTimer) renderNotes(); }
 let qrLib;
 function drawQR() {
   qrLib ||= new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js'; s.onload = res; s.onerror = rej; document.head.append(s); });
@@ -919,6 +920,12 @@ function drawQR() {
 
 /* ---------- clip helpers ---------- */
 const isIncoming = c => c.fromId ? c.fromId !== me.id : c.from !== me.device;   // by device ID, so two Macs stay distinct
+function nameFor(id, fallback) {   // "Office PC" rather than "Windows"; phones keep their kind ("iPhone")
+  if (!id || id.includes('/')) return fallback;
+  if (id === me.id) return me.name || fallback;
+  return pn(syncData?.peers?.find(p => p.id.startsWith(id))) || fallback;
+}
+const senderName = c => nameFor(c.fromId, c.from);
 const isUrl = t => /^https?:\/\/\S+$/.test(t.trim());
 const looksCode = t => /[{};<>]|^\s{2,}|\t/m.test(t) && t.includes('\n');
 function urlParts(t) { try { const u = new URL(t.trim()); return {host: u.hostname.replace(/^www\./, ''), path: decodeURIComponent(u.pathname.split('/').filter(Boolean).pop() || '').replace(/[-_]/g, ' ')}; } catch { return {host: t, path: ''}; } }
@@ -932,9 +939,9 @@ async function copyClip(c) { if (c.kind === 'file') await copyImage(fileUrl(c.pa
 function delivery(c) {        // did my latest clip reach the other computer?
   const mine = clipState.clips.find(x => !isIncoming(x)), p = peer();
   if (!mine || mine.id !== c.id || !p || Date.now() - c.at > 3600e3) return null;
-  if (!p.connected) return {cls: '', icon: I.clock, text: `Waiting for ${p.label} to come online`, short: `Waiting for ${p.label}`};
-  if (p.need) return {cls: '', icon: I.sync, text: `Syncing to ${p.label}…`, short: 'Syncing…'};
-  return {cls: 'ok', icon: I.check, text: `On ${p.label}`, short: `On ${p.label}`};
+  if (!p.connected) return {cls: '', icon: I.clock, text: `Waiting for ${pn(p)} to come online`, short: `Waiting for ${pn(p)}`};
+  if (p.need) return {cls: '', icon: I.sync, text: `Syncing to ${pn(p)}…`, short: 'Syncing…'};
+  return {cls: 'ok', icon: I.check, text: `On ${pn(p)}`, short: `On ${pn(p)}`};
 }
 const leftMin = c => Math.max(1, Math.ceil((c.expires - Date.now()) / 60000));
 const blurCls = c => c.sensitive ? ' blur' + (revealed.has(c.id) ? ' reveal' : '') : '';
@@ -990,7 +997,7 @@ function noteActs(n) {
 function clipItemHTML(c, {sel, home} = {}) {
   const d = delivery(c), isNew = !home && seenClips && !seenClips.has(c.id);
   return `<div class="ci reveal-host${isIncoming(c) ? ' in' : ''}${sel ? ' sel' : ''}" data-id="${c.id}" role="button" tabindex="-1">
-    <div class="ci-meta"><span class="who">${devIcon(c.from)}${isIncoming(c) ? esc(c.from) : 'You'}</span><span>·</span><span class="num" data-at="${c.at}">${ago(c.at)}</span>
+    <div class="ci-meta"><span class="who">${devIcon(c.from)}${isIncoming(c) ? esc(senderName(c)) : 'You'}</span><span>·</span><span class="num" data-at="${c.at}">${ago(c.at)}</span>
       ${c.pinned ? `<span class="flag" title="Pinned">${I.pin}</span>` : ''}${c.sensitive ? `<span class="flag" style="color:var(--warn)">${I.lock}${leftMin(c)} min</span>` : ''}${isNew ? '<span class="new"></span>' : ''}</div>
     ${previewBody(c)}
     ${d ? `<div class="ci-status ${d.cls}">${d.icon}${esc(d.short)}</div>` : ''}
@@ -1053,8 +1060,8 @@ function renderHero() {
     return;
   }
   if (!list.length) {
-    el.innerHTML = `<div class="hero-top">${I.clock}<span>Latest from ${esc(p?.label || 'your other devices')}</span></div>
-      <div class="empty" style="padding:26px 8px 12px"><div class="art">${A('inbox')}</div><h3>Nothing received yet</h3><p>When you send something from ${esc(p?.label || 'another device')}, it appears here, ready to copy.</p></div>`;
+    el.innerHTML = `<div class="hero-top">${I.clock}<span>Latest from ${esc(pn(p) || 'your other devices')}</span></div>
+      <div class="empty" style="padding:26px 8px 12px"><div class="art">${A('inbox')}</div><h3>Nothing received yet</h3><p>When you send something from ${esc(pn(p) || 'another device')}, it appears here, ready to copy.</p></div>`;
     return;
   }
   heroIdx = Math.min(heroIdx, list.length - 1);
@@ -1063,7 +1070,7 @@ function renderHero() {
   if (c.kind === 'file') { art = c.exists && kindOf(c.name) === 'image' ? `<div class="hero-art img" data-prev><img src="${fileUrl(c.path)}" alt=""></div>` : `<div class="hero-art">${kind3d(c.name)}</div>`; excerpt = `${kindLabel(c.name)} · ${c.exists ? size(c.size) : 'arriving…'}`; }
   else if (isUrl(c.text)) { art = `<div class="hero-art">${A('link')}</div>`; excerpt = c.text.trim(); }
   else { art = `<div class="hero-art">${c.sensitive ? A('lock') : looksCode(c.text) ? A('code') : A('clipboard')}</div>`; const l = c.text.trim().split('\n'); excerpt = l.slice(l.findIndex(x => x.trim()) + 1).join('\n').trim(); }
-  el.innerHTML = `<div class="hero-top"><span class="who">${devIcon(c.from)}Latest from ${esc(c.from)}</span><span>·</span><span class="num" data-at="${c.at}">${ago(c.at)}</span>
+  el.innerHTML = `<div class="hero-top"><span class="who">${devIcon(c.from)}Latest from ${esc(senderName(c))}</span><span>·</span><span class="num" data-at="${c.at}">${ago(c.at)}</span>
       ${c.sensitive ? `<span style="color:var(--warn);display:inline-flex;gap:4px;align-items:center">· ${I.lock}Private, ${leftMin(c)} min left</span>` : ''}</div>
     <div class="hero-body"><div class="hero-text">
       <p class="hero-title${blurCls(c)}">${esc(title)}</p>${excerpt ? `<p class="hero-excerpt${blurCls(c)}">${esc(excerpt.slice(0, 300))}</p>` : ''}
@@ -1150,18 +1157,18 @@ function renderDetail() {
   } else if (isUrl(c.text)) {
     const u = urlParts(c.text); body = `<div class="d-link${blurCls(c)}"><b>${esc(u.path || u.host)}</b><a href="${esc(c.text.trim())}" target="_blank" rel="noopener">${esc(c.text.trim())}</a></div>`;
   } else body = `<pre class="${looksCode(c.text) ? 'mono' : ''}${blurCls(c)}">${linkify(c.text)}</pre>`;
-  const info = [['From', `${c.from}${inc ? '' : ' (you)'}`], ['Sent', fullDate(c.at)],
+  const info = [['From', `${senderName(c)}${inc ? '' : ' (you)'}`], ['Sent', fullDate(c.at)],
     ['Type', c.kind === 'file' ? kindLabel(c.name) : isUrl(c.text) ? 'Link' : looksCode(c.text) ? 'Code' : 'Text'],
     ['Size', c.kind === 'file' ? size(c.size) : `${c.text.length.toLocaleString()} characters · ${c.text.trim().split(/\s+/).filter(Boolean).length.toLocaleString()} words`]];
   if (c.kind === 'file') info.push(['Saved in', c.path.split('/').slice(0, -1).join('/') || me.folder]);
   if (c.sensitive) info.push(['Private', `Deletes itself in ${leftMin(c)} min`]);
-  if (d) info.push([peer().label, `<span class="${d.cls}">${esc(d.text)}</span>`]);
+  if (d) info.push([pn(peer()), `<span class="${d.cls}">${esc(d.text)}</span>`]);
   box.innerHTML = `<div class="d-top"><button class="icon back" data-act="back" title="Back">${I.left}</button>
-      <span class="who${inc ? ' in' : ''}">${devIcon(c.from)}${inc ? 'From ' + esc(c.from) : 'You sent'}</span>${inc ? `<span class="to" style="display:flex;color:var(--faint)">${I.arrow}</span><span class="to">${esc(me.device)}</span>` : ''}
+      <span class="who${inc ? ' in' : ''}">${devIcon(c.from)}${inc ? 'From ' + esc(senderName(c)) : 'You sent'}</span>${inc ? `<span class="to" style="display:flex;color:var(--faint)">${I.arrow}</span><span class="to">${esc(me.name || me.device)}</span>` : ''}
       <span>·</span><span class="num" data-at="${c.at}">${ago(c.at)}</span><div class="grow"></div>
       <button class="icon${c.pinned ? ' on' : ''}" data-act="pin" title="${c.pinned ? 'Unpin' : 'Pin'}  P">${I.pin}</button></div>
     <div class="d-body">${body}</div>
-    <dl class="d-info">${info.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${k === (peer()?.label) ? v : esc(v)}</dd>`).join('')}</dl>
+    <dl class="d-info">${info.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${k === pn(peer()) ? v : esc(v)}</dd>`).join('')}</dl>
     <div class="d-acts">
       ${canCopy(c) ? `<button class="btn primary lg" data-act="copy">${I.copy}Copy <kbd>↵</kbd></button>` : ''}
       ${c.kind === 'file' && c.exists ? `<a class="btn lg" href="${fileUrl(c.path, 1)}">${I.download}Download</a>${kindOf(c.name) !== 'image' ? `<button class="btn lg" data-act="preview">${I.open}Preview</button>` : ''}` : ''}
@@ -1325,8 +1332,8 @@ function renderNotes() {
   if (!list.find(n => n.id === openNoteId) && !noteTimer) openNoteId = matchMedia('(max-width:760px)').matches ? null : list[0]?.id || null;
   $('#noteItems').innerHTML = list.length ? list.map(n => {
     const body = (n.title.trim() ? n.body : n.body.split('\n').slice(1).join('\n')).trim();
-    return `<div class="ni${n.id === openNoteId ? ' on' : ''}" data-id="${n.id}" role="button" tabindex="0"><b>${esc(noteTitle(n))}</b>${body ? `<p>${esc(body.slice(0, 200))}</p>` : '<p style="color:var(--faint)">No additional text</p>'}
-      <small>${esc(n.by)} · ${dateTime(n.updated)}</small>${actBar(noteActs(n))}</div>`; }).join('')
+    return `<div class="ni${n.id === openNoteId ? ' on' : ''}" data-id="${n.id}" role="button" tabindex="0"><b>${esc(noteTitle(n))}</b>${body ? `<p>${esc(body.replace(/\n\s*\n+/g, '\n').slice(0, 200))}</p>` : '<p style="color:var(--faint)">No additional text</p>'}
+      <small>${esc(nameFor(n.byId, n.by))} · ${dateTime(n.updated)}</small>${actBar(noteActs(n))}</div>`; }).join('')
     : `<div class="empty"><div class="art">${A('note')}</div><h3>No notes yet</h3><p>Start one here and pick it up on your other computer.</p></div>`;
   renderEditor();
 }
@@ -1353,7 +1360,7 @@ function renderEditor(force) {
   $('#neMore').onclick = e => { e.stopPropagation(); openMenu(e.currentTarget, [{icon: I.trash, label: 'Delete note', danger: true, confirm: noteConfirm(n), run: async () => {
     clearTimeout(noteTimer); noteTimer = null; noteState = await api('/api/notes/' + n.id, {method: 'DELETE'}); openNoteId = null; noteBase = null; renderNotes(); toast('Note deleted', I.trash); }}]); };
 }
-function updateNoteMeta(n) { const m = $('#neMeta'); if (m && !noteTimer && !noteSaving) m.textContent = n.title || n.body ? `Edited on ${n.by} · ${ago(n.updated)}` : 'New note'; }
+function updateNoteMeta(n) { const m = $('#neMeta'); if (m && !noteTimer && !noteSaving) m.textContent = n.title || n.body ? `Edited on ${nameFor(n.byId, n.by)} · ${ago(n.updated)}` : 'New note'; }
 async function dropIfEmpty() { const n = noteState.notes.find(x => x.id === openNoteId); if (n && !n.title.trim() && !n.body.trim()) noteState = await api('/api/notes/' + n.id, {method: 'DELETE'}); }
 async function saveNote() {
   noteTimer = null; const id = openNoteId; if (!id) return;
@@ -1422,7 +1429,7 @@ function renderPalette() {
   ].filter(a => has(a.title + ' ' + a.sub));
   const clips = clipState.clips.filter(c => !c.sensitive && has(c.kind === 'file' ? c.name : c.text)).slice(0, q ? 6 : 4).map(c => ({
     icon: c.kind === 'file' ? (c.exists && kindOf(c.name) === 'image' ? `<img class="thumb" src="${fileUrl(c.path)}" alt="">` : kind3d(c.name)) : isUrl(c.text) ? A('link') : A('clipboard'),
-    title: clipTitle(c), sub: `${isIncoming(c) ? 'From ' + c.from : 'You sent'} · ${ago(c.at)}`, hint: canCopy(c) ? 'Copy' : 'Open',
+    title: clipTitle(c), sub: `${isIncoming(c) ? 'From ' + senderName(c) : 'You sent'} · ${ago(c.at)}`, hint: canCopy(c) ? 'Copy' : 'Open',
     run: async () => { if (canCopy(c)) { await copyClip(c); toast('Copied'); } else { selClip = c.id; location.hash = 'clipboard'; } }}));
   const files = pal.files.map(f => ({icon: fileIcon(f), title: f.name, sub: f.path.split('/').slice(0, -1).join('/') || me.folder, hint: f.dir ? 'Open' : 'Preview',
     run: () => f.dir ? go(f.path) : openPreview([f], 0)}));
@@ -1470,7 +1477,7 @@ async function pollPair() {
     if (pairUI.step === 'wait') {
       syncData = await api('/api/sync');
       const p = syncData.peers?.find(x => x.id === pairUI.target.id);
-      if (p?.connected && p.shared) { pairUI.step = 'done'; pairUI.target.label = p.label; renderDevices(); }   // accepted, not just reachable
+      if (p?.connected && p.shared) { pairUI.step = 'done'; pairUI.target.label = pn(p); pairUI.target.os ||= osOf(p.label); renderDevices(); }   // accepted, not just reachable
     }
   } catch {}
   renderPair();
@@ -1672,7 +1679,10 @@ addEventListener('pagehide', () => store.set('hub.seen', Date.now()));
   $('#kKey').textContent = apple() ? '⌘K' : 'Ctrl K';
   if (!canReadClipboard()) $('#qaClipboard').hidden = true;
   setGreeting(); renderDevices();
+  const wantsPair = location.hash === '#add-device';
+  if (wantsPair) history.replaceState(null, '', '#home');
   route();
+  if (wantsPair) openPair();
   loadClips(); loadNotes(); loadRecent(); loadSync();
   setInterval(loadClips, 1500);
   setInterval(loadNotes, 3000);

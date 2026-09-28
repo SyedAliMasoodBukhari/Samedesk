@@ -57,8 +57,12 @@ type Hub struct {
 	sync  syncCache
 }
 
-// Device is how this computer appears to the others.
+// Device is what kind of computer this is. SHAREDHUB_DEVICE_KIND overrides it,
+// so one machine can stand in for another OS when testing or making screenshots.
 func Device() string {
+	if k := os.Getenv("SHAREDHUB_DEVICE_KIND"); k == "Mac" || k == "Windows" || k == "Linux" {
+		return k
+	}
 	switch runtime.GOOS {
 	case "darwin":
 		return "Mac"
@@ -287,7 +291,7 @@ func (h *Hub) route(w http.ResponseWriter, r *http.Request) error {
 
 func (h *Hub) me(w http.ResponseWriter, r *http.Request) error {
 	local := isLoopback(r)
-	out := map[string]any{"device": h.sender(r), "id": h.senderID(r), "host": h.device, "local": local, "folder": filepath.Base(h.root), "link": nil}
+	out := map[string]any{"device": h.sender(r), "id": h.senderID(r), "name": h.eng.Name(), "host": h.device, "local": local, "folder": filepath.Base(h.root), "link": nil}
 	if ip := lanIP(); ip != "" && local {
 		out["link"] = fmt.Sprintf("http://%s:%d/?k=%s", ip, h.port, h.key)
 	}
@@ -543,7 +547,7 @@ func (h *Hub) notesAPI(w http.ResponseWriter, r *http.Request) error {
 			b.Title = string([]rune(b.Title)[:200])
 		}
 		t, by := nowMs(), h.sender(r)
-		n := Note{ID: b.ID, Title: b.Title, Body: b.Body, Updated: t, By: by, Created: t, CreatedBy: by}
+		n := Note{ID: b.ID, Title: b.Title, Body: b.Body, Updated: t, By: by, ByID: h.senderID(r), Created: t, CreatedBy: by}
 		for _, prev := range mergeNotes(h.notes.all()).Notes {
 			if prev.ID == b.ID {
 				n.Created, n.CreatedBy = prev.Created, prev.CreatedBy

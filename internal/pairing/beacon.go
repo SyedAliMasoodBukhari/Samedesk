@@ -127,6 +127,9 @@ func (b *Beacon) receive() {
 			continue // only collect while we're looking
 		}
 		host, _, _ := net.SplitHostPort(from.String())
+		if ip := net.ParseIP(host); ip != nil && ip.IsLoopback() {
+			host = "" // same machine; nothing useful to show
+		}
 		b.mu.Lock()
 		b.seen[a.ID] = Seen{Announce: a, Addr: host, At: time.Now()}
 		b.mu.Unlock()
