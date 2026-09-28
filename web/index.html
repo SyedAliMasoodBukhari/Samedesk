@@ -1,0 +1,1505 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" id="themeColor" content="#f7f7f8">
+<script>
+  (function () {   // apply the saved theme before first paint (default: match system)
+    var p; try { p = localStorage.getItem('hub.theme'); } catch (e) {}
+    var dark = p === 'dark' || (p !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  })();
+</script>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Shared Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23418fcc'/><rect x='8.5' y='10' width='10' height='13' rx='2.5' fill='none' stroke='white' stroke-width='2'/><rect x='13.5' y='7' width='10' height='13' rx='2.5' fill='%23418fcc' stroke='white' stroke-width='2'/></svg>">
+<style>
+:root{
+  --bg:#f7f7f8; --side:#f7f7f8; --panel:#fff; --raised:#fff; --line:#e9eaee; --line-2:#dcdee4;
+  --ink:#111318; --ink-2:#434955; --muted:#7d8391; --faint:#b6bac3;
+  --hover:rgba(16,24,40,.04); --active:rgba(16,24,40,.065);
+  --accent:#418fcc; --accent-hover:#3781bb; --on-accent:#fff; --accent-soft:#eef5fb; --accent-line:#c8def0;
+  --ok:#1f9d63; --warn:#b7791f; --danger:#d14343; --danger-soft:#fdeeee;
+  --shadow-sm:0 1px 2px rgba(16,24,40,.04);
+  --shadow:0 1px 2px rgba(16,24,40,.04),0 4px 14px -8px rgba(16,24,40,.08);
+  --shadow-lg:0 2px 4px rgba(16,24,40,.04),0 24px 56px -20px rgba(16,24,40,.24);
+  --overlay:rgba(247,247,248,.72);
+  --sans:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Code",Consolas,monospace;
+  color-scheme:light;
+}
+:root[data-theme=dark]{
+  --bg:#0e1013; --side:#0e1013; --panel:#15181d; --raised:#1a1d23; --line:#23272f; --line-2:#2e333d;
+  --ink:#ebedf1; --ink-2:#b9bfca; --muted:#808897; --faint:#4c525d;
+  --hover:rgba(255,255,255,.035); --active:rgba(255,255,255,.065);
+  --accent:#418fcc; --accent-hover:#58a0d9; --on-accent:#fff; --accent-soft:rgba(65,143,204,.13); --accent-line:rgba(65,143,204,.34);
+  --ok:#3dd68c; --warn:#e6b062; --danger:#ff6b6b; --danger-soft:rgba(255,107,107,.1);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.3);
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px -10px rgba(0,0,0,.5);
+  --shadow-lg:0 2px 4px rgba(0,0,0,.3),0 30px 70px -24px rgba(0,0,0,.75);
+  --overlay:rgba(14,16,19,.72);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:13.5px/1.5 var(--sans);letter-spacing:-.006em;-webkit-font-smoothing:antialiased;font-feature-settings:"cv11","ss01"}
+button,input,textarea{font:inherit;color:inherit;letter-spacing:inherit}
+button{background:none;border:0;cursor:pointer;padding:0;text-align:inherit}
+a{color:inherit;text-decoration:none}
+svg{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+::selection{background:var(--accent-soft)}
+.num{font-variant-numeric:tabular-nums}
+.grow{flex:1}
+kbd{font:500 11px var(--sans);padding:1px 5px;border:1px solid var(--line-2);border-bottom-width:2px;border-radius:5px;color:var(--muted);background:var(--panel)}
+.i3d{display:block;width:100%;height:100%;object-fit:contain;user-select:none;-webkit-user-drag:none;filter:drop-shadow(0 1px 1px rgba(16,24,40,.10)) drop-shadow(0 4px 7px rgba(16,24,40,.09))}
+[data-theme=dark] .i3d{filter:drop-shadow(0 1px 1px rgba(0,0,0,.35)) drop-shadow(0 5px 9px rgba(0,0,0,.35))}
+
+/* ---------- shell ---------- */
+.shell{display:grid;grid-template-columns:236px minmax(0,1fr);height:100%}
+.side{background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:14px 10px 12px;min-height:0;overflow:auto}
+.logo{display:flex;align-items:center;gap:10px;padding:4px 8px 18px;font-weight:600;font-size:14px;letter-spacing:-.015em}
+.mark{width:24px;height:24px;border-radius:7px;background:var(--accent);color:#fff;display:grid;place-items:center;flex:none}
+.mark svg{width:13px;height:13px;stroke-width:2}
+.nav{display:flex;align-items:center;gap:10px;height:32px;padding:0 10px;border-radius:8px;color:var(--ink-2);font-weight:500;transition:background .12s,color .12s;width:100%}
+.nav svg{color:var(--muted);transition:color .12s}
+.nav:hover{background:var(--hover);color:var(--ink)}
+.nav.on{background:var(--active);color:var(--ink)}
+.nav.on svg{color:var(--ink)}
+.nav .badge{margin-left:auto;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:var(--accent);color:#fff;font-size:10.5px;font-weight:600;display:grid;place-items:center}
+.nav kbd{margin-left:auto;border:0;background:none;padding:0}
+.side-label{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.04em;padding:22px 10px 6px}
+.sdev{display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:8px;transition:background .12s}
+.sdev:hover{background:var(--hover)}
+.sdev b{display:block;font-weight:500;font-size:13px;line-height:1.25}
+.sdev small{display:block;color:var(--muted);font-size:11.5px;line-height:1.3}
+.side .spacer{flex:1;min-height:16px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--faint);flex:none;display:inline-block}
+.dot.ok{background:var(--ok)}
+.dot.busy{background:var(--accent);animation:breathe 1.5s ease-in-out infinite}
+.dot.bad{background:var(--danger)}
+@keyframes breathe{50%{opacity:.35}}
+
+.main{min-width:0;display:flex;flex-direction:column;height:100%;overflow:hidden}
+.top{display:flex;align-items:center;gap:12px;height:56px;padding:0 28px;border-bottom:1px solid var(--line);flex:none}
+.top .mlogo,.top .mstatus{display:none}
+.searchbtn{display:flex;align-items:center;gap:10px;height:34px;width:min(440px,100%);padding:0 10px 0 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--muted);transition:border-color .15s}
+.searchbtn:hover{border-color:var(--line-2)}
+.searchbtn span{flex:1}
+.content{flex:1;overflow:auto;padding:28px 28px 48px;scrollbar-width:thin;scrollbar-color:var(--line-2) transparent}
+.page{max-width:1180px;margin:0 auto;animation:enter .24s cubic-bezier(.2,.8,.2,1)}
+@keyframes enter{from{opacity:0;transform:translateY(4px)}}
+.page-head{display:flex;align-items:flex-end;gap:12px;margin:0 0 20px;flex-wrap:wrap}
+.page-head h1{margin:0;font-size:22px;font-weight:600;letter-spacing:-.022em;line-height:1.25}
+.page-head p{margin:3px 0 0;color:var(--muted)}
+
+/* ---------- primitives ---------- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-sm)}
+.card-h{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;min-height:48px}
+.card-h h2{margin:0;font-size:13px;font-weight:600}
+.card-h .aside{margin-left:auto;color:var(--muted);font-size:12.5px;display:flex;align-items:center;gap:6px}
+.card-h a.aside:hover{color:var(--ink)}
+.btn{height:32px;padding:0 12px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;gap:7px;font-size:13px;font-weight:500;border:1px solid var(--line-2);background:var(--panel);color:var(--ink);white-space:nowrap;transition:background .12s,border-color .12s,color .12s,transform .06s}
+.btn:hover{background:var(--hover);border-color:color-mix(in srgb,var(--ink) 18%,transparent)}
+.btn:active{transform:scale(.985)}
+.btn svg{width:15px;height:15px;color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary svg{color:#fff}
+.btn.primary:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+.btn.ghost{border-color:transparent;background:none}
+.btn.ghost:hover{background:var(--hover)}
+.btn.danger{color:var(--danger)}
+.btn.danger svg{color:var(--danger)}
+.btn.lg{height:36px;padding:0 16px}
+.btn:disabled{opacity:.45;cursor:default}
+.btn kbd{border:0;background:none;padding:0;color:inherit;opacity:.65;font-size:11.5px}
+.btn.done{color:var(--ok)}
+.btn.done svg{color:var(--ok)}
+.btn.primary.done{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.primary.done svg{color:#fff}
+.icon{width:30px;height:30px;border-radius:8px;display:inline-grid;place-items:center;color:var(--muted);transition:background .12s,color .12s;flex:none}
+.icon:hover{background:var(--hover);color:var(--ink)}
+.icon.on{color:var(--accent);background:var(--accent-soft)}
+.seg{display:inline-flex;gap:2px;padding:2px;border-radius:9px;background:var(--active)}
+.seg button{height:26px;padding:0 11px;border-radius:7px;font-size:12.5px;font-weight:500;color:var(--muted);display:flex;align-items:center;gap:6px;transition:all .12s}
+.seg button:hover{color:var(--ink)}
+.seg button.on{background:var(--panel);color:var(--ink);box-shadow:0 1px 2px rgba(16,24,40,.08),0 0 0 1px var(--line)}
+.seg em{font-style:normal;font-size:11px;color:var(--muted)}
+.empty{text-align:center;padding:44px 24px;color:var(--muted)}
+.empty .art{width:56px;height:56px;margin:0 auto 14px}
+.empty h3{margin:0 0 5px;color:var(--ink);font-size:14px;font-weight:600}
+.empty p{margin:0 auto;max-width:320px;font-size:13px;line-height:1.6}
+.blur{filter:blur(6px);user-select:none;transition:filter .2s}
+.reveal-host:hover .blur,.blur.reveal{filter:none;user-select:auto}
+@media (hover:none){.reveal-host:hover .blur{filter:blur(6px)}.blur.reveal{filter:none}}
+.switch{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-2);cursor:pointer;user-select:none}
+.switch i{width:30px;height:18px;border-radius:99px;background:var(--line-2);position:relative;transition:background .2s}
+.switch i:after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .2s cubic-bezier(.2,.8,.2,1)}
+.switch.on i{background:var(--accent)}
+.switch.on i:after{transform:translateX(12px)}
+
+/* ---------- send bar ---------- */
+.sendbar{display:flex;align-items:flex-end;gap:6px;padding:6px 6px 6px 14px;border-radius:12px;transition:border-color .15s,box-shadow .15s}
+.sendbar:focus-within{border-color:var(--accent-line);box-shadow:0 0 0 4px var(--accent-soft)}
+.sendbar textarea{flex:1;min-width:0;border:0;outline:0;background:transparent;resize:none;height:32px;max-height:200px;padding:6px 0;line-height:20px;font-size:14px}
+.sendbar textarea::placeholder{color:var(--muted)}
+.sendbar.private textarea{-webkit-text-security:disc}
+.sendbar .sb-acts{display:flex;align-items:center;gap:2px}
+.sendbar .sb-private.on{width:auto;padding:0 8px;gap:5px;display:inline-flex;align-items:center;font-size:12px;font-weight:500}
+
+/* ---------- home ---------- */
+.qa{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 0}
+.home-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;margin-top:16px;align-items:start}
+.hero{padding:18px 20px 18px;position:relative}
+.hero .hover-acts{top:12px;right:12px}
+.hero-top{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12.5px}
+.hero-top .who{display:inline-flex;align-items:center;gap:6px;color:var(--accent);font-weight:600}
+.hero-top svg{width:14px;height:14px}
+.hero-body{display:flex;gap:18px;align-items:flex-start;margin-top:14px}
+.hero-text{flex:1;min-width:0}
+.hero-title{font-size:17px;font-weight:600;letter-spacing:-.018em;line-height:1.4;margin:0 0 6px;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.hero-excerpt{color:var(--ink-2);margin:0;white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.hero-art{width:72px;height:72px;flex:none}
+.hero-art.img{width:150px;height:104px;border-radius:10px;overflow:hidden;border:1px solid var(--line);cursor:zoom-in}
+.hero-art img{width:100%;height:100%;object-fit:cover}
+.hero-acts{display:flex;align-items:center;gap:8px;margin-top:18px}
+.dots{display:flex;gap:5px;margin-left:auto}
+.dots button{width:6px;height:6px;border-radius:99px;background:var(--line-2);transition:all .25s}
+.dots button.on{width:16px;background:var(--ink-2)}
+.shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding:2px 14px 14px}
+.ftile{position:relative;border:1px solid var(--line);border-radius:11px;padding:10px;display:flex;flex-direction:column;gap:8px;cursor:pointer;transition:border-color .12s,background .12s;min-width:0}
+.ftile:hover{border-color:var(--line-2);background:var(--hover)}
+.ftile .fprev{height:78px;border-radius:7px;display:grid;place-items:center;overflow:hidden;background:var(--hover);position:relative}
+.ftile .fprev img.thumb{width:100%;height:100%;object-fit:cover}
+.ftile .fprev .i3d{width:44px;height:44px}
+.ftile b{font-weight:500;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.ftile small{color:var(--muted);font-size:11.5px}
+
+/* ---------- clip previews (shared by home + clipboard list) ---------- */
+.clist{padding:4px 6px 8px}
+.ci{display:block;width:100%;padding:10px 12px 11px;border-radius:10px;position:relative;cursor:pointer;transition:background .12s}
+.ci:hover{background:var(--hover)}
+.ci.sel{background:var(--active)}
+.ci.sel:before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:2px;border-radius:2px;background:var(--accent)}
+.ci+.ci:after{content:"";position:absolute;left:12px;right:12px;top:0;border-top:1px solid var(--line)}
+.ci:hover:after,.ci.sel:after,.ci:hover+.ci:after,.ci.sel+.ci:after{opacity:0}
+.ci-meta{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:12px;margin-bottom:4px;white-space:nowrap;min-width:0}
+.ci-meta .who{display:inline-flex;align-items:center;gap:5px;color:var(--ink-2);font-weight:500}
+.ci.in .ci-meta .who{color:var(--accent)}
+.ci-meta svg{width:12px;height:12px}
+.ci-meta .flag{display:inline-flex;align-items:center;gap:3px}
+.ci-meta .new{width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:auto}
+.ci-text{color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;line-height:1.5}
+.ci-text.mono{font:12px/1.55 var(--mono);color:var(--ink-2)}
+.ci-link{display:flex;align-items:center;gap:10px;min-width:0}
+.ci-link .i3d{width:26px;height:26px;flex:none}
+.ci-link b{display:block;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ci-link small{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ci-img{display:block;width:100%;max-width:260px;height:96px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+.ci-status{display:flex;align-items:center;gap:5px;margin-top:6px;font-size:11.5px;color:var(--muted)}
+.ci-status.ok{color:var(--ok)}
+.ci-status svg{width:12px;height:12px}
+
+/* ---------- hover quick actions ---------- */
+.hover-acts{position:absolute;top:6px;right:8px;z-index:2;display:flex;gap:1px;padding:2px;border-radius:9px;background:var(--raised);box-shadow:0 0 0 1px var(--line),0 6px 16px -8px rgba(16,24,40,.22);opacity:0;pointer-events:none;transform:translateY(-2px);transition:opacity .12s,transform .12s}
+.ci:hover .hover-acts,.ni:hover .hover-acts,.ftile:hover .hover-acts,.hero:hover .hover-acts,.hover-acts:focus-within{opacity:1;pointer-events:auto;transform:none}
+.hover-acts .icon{width:28px;height:28px;border-radius:7px}
+.hover-acts .icon svg{width:15px;height:15px}
+.hover-acts .icon.danger:hover{color:var(--danger);background:var(--danger-soft)}
+.hover-acts .icon.done{color:var(--ok)}
+.hover-acts .qa-more{display:none}
+.row-qa{display:flex;align-items:center;justify-content:flex-end;gap:1px}
+.row-qa .qa-full{opacity:0;transition:opacity .12s}
+.tr:hover .row-qa .qa-full,.row-qa:focus-within .qa-full{opacity:1}
+.row-qa .icon.danger:hover{color:var(--danger);background:var(--danger-soft)}
+@media (hover:none){
+  .hover-acts{opacity:1;pointer-events:auto;transform:none;background:none;box-shadow:none;top:4px;right:4px}
+  .hover-acts .qa-full{display:none}.hover-acts .qa-more{display:inline-grid}
+  .row-qa .qa-full{display:none}
+}
+
+/* ---------- clipboard page: list + detail ---------- */
+.md{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);min-height:560px;height:calc(100vh - 250px);overflow:hidden;margin-top:14px}
+.md-list{border-right:1px solid var(--line);overflow:auto;min-height:0;scrollbar-width:thin}
+.md-detail{display:flex;flex-direction:column;min-height:0;min-width:0}
+.d-top{display:flex;align-items:center;gap:8px;white-space:nowrap;padding:14px 18px;border-bottom:1px solid var(--line);color:var(--muted);font-size:12.5px;min-height:56px}
+.d-top .who{display:inline-flex;align-items:center;gap:6px;color:var(--ink-2);font-weight:500}
+.d-top .who.in{color:var(--accent)}
+.d-top .back{display:none}
+.d-top svg{width:14px;height:14px}
+.d-body{flex:1;overflow:auto;padding:22px 24px;min-height:0}
+.d-body pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:14.5px/1.7 var(--sans);color:var(--ink)}
+.d-body pre.mono{font:13px/1.65 var(--mono)}
+.d-body pre a{color:var(--accent);text-underline-offset:3px;text-decoration:underline}
+.d-body img.big{max-width:100%;max-height:420px;border-radius:12px;border:1px solid var(--line);cursor:zoom-in;display:block}
+.d-file{display:flex;align-items:center;gap:16px}
+.d-file .i3d{width:64px;height:64px}
+.d-file b{display:block;font-size:16px;font-weight:600;overflow-wrap:anywhere}
+.d-file small{color:var(--muted)}
+.d-link b{display:block;font-size:18px;font-weight:600;letter-spacing:-.015em;margin-bottom:4px}
+.d-link a{color:var(--accent);overflow-wrap:anywhere}
+.d-info{border-top:1px solid var(--line);padding:12px 24px 6px;display:grid;grid-template-columns:130px 1fr;row-gap:6px;font-size:12.5px}
+.d-info dt{color:var(--muted)}
+.d-info dd{margin:0;color:var(--ink-2)}
+.d-info .ok{color:var(--ok)}
+.d-acts{display:flex;align-items:center;gap:8px;padding:12px 24px 16px}
+
+/* ---------- files ---------- */
+.ftool{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.crumbs{display:flex;align-items:center;min-width:0;gap:1px;font-weight:600}
+.crumbs button{color:var(--muted);font-weight:500;padding:3px 6px;border-radius:6px}
+.crumbs button:hover{color:var(--ink);background:var(--hover)}
+.crumbs span{padding:3px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
+.crumbs i{color:var(--faint);font-style:normal}
+.table{padding:4px 6px 8px}
+.thead,.tr{display:grid;grid-template-columns:minmax(0,1fr) 160px 90px 128px;align-items:center;gap:12px;padding:0 10px}
+.thead{height:32px;color:var(--muted);font-size:12px}
+.tr{min-height:48px;border-radius:9px;cursor:pointer;transition:background .12s}
+.tr:hover{background:var(--hover)}
+.tr.hl{background:var(--accent-soft)}
+.tname{display:flex;align-items:center;gap:12px;min-width:0}
+.ficon{width:30px;height:30px;flex:none;position:relative;display:grid;place-items:center}
+.ficon img.thumb{width:30px;height:30px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
+.tname b{display:block;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tname small{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tname input{width:100%;font-weight:500;border:1px solid var(--accent-line);border-radius:7px;padding:3px 8px;outline:0;background:var(--panel);box-shadow:0 0 0 3px var(--accent-soft)}
+.tmod,.tsize{color:var(--muted);font-size:12.5px;white-space:nowrap}
+.newdot{position:absolute;top:-1px;right:-2px;width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--panel)}
+.progress{height:2px;background:var(--accent);position:fixed;left:0;top:0;width:0;transition:width .2s;z-index:90}
+
+/* ---------- notes ---------- */
+.notes{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);min-height:560px;height:calc(100vh - 190px);overflow:hidden}
+.nlist{border-right:1px solid var(--line);overflow:auto;min-height:0;padding:6px}
+.ni{display:block;width:100%;padding:11px 12px;border-radius:10px;position:relative;cursor:pointer;transition:background .12s}
+.ni:hover{background:var(--hover)}
+.ni.on{background:var(--active)}
+.ni+.ni:after{content:"";position:absolute;left:12px;right:12px;top:0;border-top:1px solid var(--line)}
+.ni:hover:after,.ni.on:after,.ni:hover+.ni:after,.ni.on+.ni:after{opacity:0}
+.ni b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ni p{margin:2px 0 6px;color:var(--ink-2);font-size:12.5px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere}
+.ni small{color:var(--muted);font-size:11.5px}
+.neditor{display:flex;flex-direction:column;min-height:0;padding:18px 34px 24px;overflow:auto}
+.ne-top{display:flex;align-items:center;gap:4px;margin:0 -12px 18px 0;min-height:30px}
+.ne-top .back{display:none}
+.ne-meta{color:var(--muted);font-size:12px}
+.ne-title{border:0;outline:0;background:transparent;font-size:26px;font-weight:650;letter-spacing:-.025em;padding:0 0 8px;color:var(--ink);width:100%}
+.ne-body{flex:1;min-height:300px;border:0;outline:0;background:transparent;resize:none;font-size:15px;line-height:1.75;padding:4px 0;color:var(--ink-2)}
+.ne-title::placeholder,.ne-body::placeholder{color:var(--faint)}
+
+/* ---------- settings ---------- */
+.set-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+.stack{display:flex;flex-direction:column;gap:16px;min-width:0}
+.theme-opts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:2px 16px 16px}
+.theme-opts button{display:flex;flex-direction:column;gap:8px;align-items:flex-start;font-size:12.5px;font-weight:500;color:var(--ink-2)}
+.theme-opts button.on{color:var(--ink)}
+.swatch{width:100%;aspect-ratio:16/10;border-radius:10px;border:1px solid var(--line-2);overflow:hidden;display:flex;transition:border-color .15s,box-shadow .15s}
+.theme-opts button.on .swatch{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.swatch i{flex:1;display:flex;flex-direction:column;gap:5px;padding:10px 9px}
+.swatch b{height:5px;border-radius:3px;width:100%}
+.swatch b:first-child{width:55%;background:#418fcc!important}
+.swatch b:last-child{width:75%}
+.sw-l{background:#f7f7f8}.sw-l b{background:#dfe1e6}
+.sw-d{background:#0e1013}.sw-d b{background:#2b3039}
+.devrow{display:flex;align-items:center;gap:12px;padding:11px 16px}
+.devrow+.devrow{border-top:1px solid var(--line)}
+.devrow .dev3d{width:30px;height:30px;flex:none;display:grid;place-items:center;color:var(--ink-2)}
+.devrow b{display:block;font-weight:500}
+.devrow small{display:block;color:var(--muted);font-size:12px}
+.devrow .state{margin-left:auto;display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.mlist{padding:4px 6px 8px}
+.mlist button,.mlist a{display:flex;align-items:center;gap:11px;width:100%;padding:9px 10px;border-radius:8px;color:var(--ink-2);font-size:13px}
+.mlist button:hover,.mlist a:hover{background:var(--hover);color:var(--ink)}
+.mlist svg{color:var(--muted)}
+#phoneCard{grid-column:1/-1}
+.phone-card{padding:22px;display:flex;gap:24px;align-items:center}
+.qr{width:140px;height:140px;background:#fff;border-radius:12px;padding:10px;border:1px solid var(--line);flex:none;display:grid;place-items:center}
+.qr svg{width:120px;height:120px;stroke:none}
+.phone-card h3{margin:0 0 5px;font-size:14px;font-weight:600}
+.phone-card p{margin:0 0 12px;color:var(--muted);font-size:13px}
+.linkline{font:12px var(--mono);color:var(--muted);background:var(--hover);border:1px solid var(--line);border-radius:8px;padding:7px 10px;word-break:break-all;margin-bottom:10px}
+.phone3d{flex:none;width:176px;height:296px;perspective:1100px;display:grid;place-items:center;margin:-8px 0}
+.p-body{position:relative;width:136px;height:278px;border-radius:32px;padding:5px;transform:rotateY(-24deg) rotateX(7deg) rotateZ(2deg);
+  background:linear-gradient(135deg,#e4e6ea 0%,#9aa0a8 22%,#d6d9de 48%,#7d838b 74%,#c4c8ce 100%);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.55),inset 0 0 0 2px rgba(0,0,0,.18),-26px 34px 40px -18px rgba(16,24,40,.38),-6px 10px 16px -8px rgba(16,24,40,.25)}
+.p-body:before{content:"";position:absolute;left:-2px;top:74px;width:3px;height:26px;border-radius:2px 0 0 2px;background:#8b9098;box-shadow:0 36px 0 #8b9098,0 70px 0 #8b9098}
+.p-body:after{content:"";position:absolute;right:-2px;top:96px;width:3px;height:44px;border-radius:0 2px 2px 0;background:#8b9098}
+.p-screen{position:relative;height:100%;border-radius:27px;background:#08090b;padding:4px;overflow:hidden}
+.p-screen:after{content:"";position:absolute;inset:0;border-radius:27px;background:linear-gradient(118deg,rgba(255,255,255,.26) 0%,rgba(255,255,255,.05) 30%,rgba(255,255,255,0) 44%);pointer-events:none}
+.p-island{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:40px;height:12px;border-radius:9px;background:#000;z-index:2}
+.p-app{height:100%;border-radius:23px;background:#f7f7f8;padding:30px 9px 10px;display:flex;flex-direction:column;gap:7px;color:#111318;font-size:7.5px;line-height:1.3}
+.p-top{display:flex;align-items:center;gap:5px;font-weight:650;font-size:8.5px}
+.p-top .mark{width:15px;height:15px;border-radius:5px}
+.p-top .mark svg{width:9px;height:9px}
+.p-card{background:#fff;border-radius:10px;padding:8px;box-shadow:0 0 0 1px #eceef2}
+.p-card small{display:block;color:#418fcc;font-size:5.5px;font-weight:600;letter-spacing:.06em;margin-bottom:3px}
+.p-card b{display:block;font-weight:600;margin-bottom:6px}
+.p-card i{display:inline-block;font-style:normal;background:#418fcc;color:#fff;border-radius:5px;padding:2px 7px;font-size:6.5px;font-weight:600}
+.p-row{display:flex;align-items:center;gap:6px;background:#fff;border-radius:9px;padding:6px 7px;box-shadow:0 0 0 1px #eceef2}
+.p-row img{width:16px;height:16px}
+.p-row span{flex:1;display:flex;flex-direction:column;gap:3px}
+.p-row span i{display:block;height:4px;border-radius:2px;background:#dfe2e8}
+.p-row span i:first-child{width:80%;background:#c9ced6}
+.p-bar{margin-top:auto;height:3px;width:44px;border-radius:2px;background:#111318;align-self:center;opacity:.8}
+
+/* ---------- overlays ---------- */
+.dlg-wrap{position:fixed;inset:0;z-index:92;background:var(--overlay);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:grid;place-items:center;padding:20px;animation:fade .12s}
+.dlg{width:min(400px,100%);background:var(--raised);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg);padding:22px 22px 18px;animation:pop .16s cubic-bezier(.2,.8,.2,1)}
+.dlg-ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:var(--danger-soft);color:var(--danger);margin-bottom:14px}
+.dlg-ic svg{width:18px;height:18px}
+.dlg h3{margin:0 0 6px;font-size:15px;font-weight:600;letter-spacing:-.01em;overflow-wrap:anywhere}
+.dlg p{margin:0;color:var(--muted);font-size:13px;line-height:1.55}
+.dlg-prev{margin-top:14px;padding:10px 12px;border-radius:10px;background:var(--hover);border:1px solid var(--line);color:var(--ink-2);font-size:12.5px;display:flex;align-items:center;gap:10px;min-width:0}
+.dlg-prev .i3d{width:26px;height:26px;flex:none}
+.dlg-prev span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dlg-acts{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
+.btn.destroy{background:var(--danger);border-color:var(--danger);color:#fff}
+.btn.destroy:hover{background:color-mix(in srgb,var(--danger) 88%,#000);border-color:transparent}
+.btn.destroy svg{color:#fff}
+.menu{position:fixed;z-index:80;min-width:200px;background:var(--raised);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-lg);padding:5px;animation:pop .14s cubic-bezier(.2,.8,.2,1)}
+@keyframes pop{from{opacity:0;transform:scale(.97) translateY(-3px)}}
+.menu button,.menu a{display:flex;align-items:center;gap:10px;width:100%;padding:7px 10px;border-radius:7px;font-size:13px;color:var(--ink-2)}
+.menu button:hover,.menu a:hover{background:var(--hover);color:var(--ink)}
+.menu .danger,.menu .danger svg{color:var(--danger)}
+.menu hr{border:0;border-top:1px solid var(--line);margin:5px 4px}
+.help{position:fixed;left:246px;bottom:14px;width:300px;z-index:80;background:var(--raised);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-lg);padding:16px;animation:pop .14s}
+.help h3{margin:0 0 10px;font-size:13px;font-weight:600}
+.help div{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0;font-size:12.5px;color:var(--ink-2)}
+.help div+div{border-top:1px solid var(--line)}
+
+.palette-wrap{position:fixed;inset:0;z-index:85;background:var(--overlay);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;justify-content:center;align-items:flex-start;padding:12vh 16px 16px;animation:fade .12s}
+.palette{width:min(640px,100%);background:var(--raised);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg);overflow:hidden;animation:pop .16s cubic-bezier(.2,.8,.2,1)}
+.pal-in{display:flex;align-items:center;gap:10px;padding:0 16px;height:52px;border-bottom:1px solid var(--line);color:var(--muted)}
+.pal-in input{flex:1;border:0;outline:0;background:transparent;font-size:15px;color:var(--ink)}
+.pal-res{max-height:min(460px,60vh);overflow:auto;padding:6px}
+.pal-g{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.04em;padding:10px 10px 4px}
+.pal-i{display:flex;align-items:center;gap:12px;width:100%;padding:8px 10px;border-radius:9px;min-height:42px}
+.pal-i.on{background:var(--active)}
+.pal-i .pi{width:24px;height:24px;flex:none;display:grid;place-items:center;color:var(--muted)}
+.pal-i .pi img.thumb{width:24px;height:24px;object-fit:cover;border-radius:5px}
+.pal-i b{display:block;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pal-i small{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pal-i .pm{min-width:0;flex:1}
+.pal-i .hint{color:var(--muted);font-size:11.5px;opacity:0}
+.pal-i.on .hint{opacity:1}
+.pal-foot{display:flex;gap:14px;padding:9px 16px;border-top:1px solid var(--line);color:var(--muted);font-size:11.5px}
+
+.dropzone{position:fixed;inset:0;z-index:70;background:var(--overlay);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:grid;place-items:center;padding:24px;animation:fade .15s}
+@keyframes fade{from{opacity:0}}
+.dz{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:min(720px,100%)}
+.dz>div{height:210px;border:1.5px dashed var(--line-2);border-radius:18px;background:var(--panel);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:20px;transition:all .16s}
+.dz>div.on{border-color:var(--accent);border-style:solid;background:var(--accent-soft)}
+.dz .art{width:56px;height:56px;margin-bottom:10px}
+.dz b{font-size:15px;font-weight:600}
+.dz small{color:var(--muted);font-size:12.5px}
+
+.modal{position:fixed;inset:0;background:var(--overlay);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:75;display:flex;align-items:center;justify-content:center;padding:32px;animation:fade .15s}
+.sheet{background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow-lg);width:min(1100px,100%);height:min(88vh,920px);display:flex;flex-direction:column;overflow:hidden;animation:pop .2s cubic-bezier(.2,.8,.2,1)}
+.sheet-top{display:flex;align-items:center;gap:6px;padding:10px 10px 10px 16px;border-bottom:1px solid var(--line)}
+.sheet-top .tname{flex:1}
+.sheet-body{flex:1;min-height:0;display:grid;place-items:center;background:var(--bg);position:relative;overflow:auto}
+.sheet-body img,.sheet-body video{max-width:100%;max-height:100%;object-fit:contain;display:block}
+.sheet-body iframe{border:0;width:100%;height:100%;background:#fff}
+.sheet-body pre{margin:0;padding:24px 28px;width:100%;height:100%;overflow:auto;font:12.5px/1.65 var(--mono);white-space:pre-wrap;word-break:break-word;align-self:start;background:var(--panel)}
+.nav-arrow{position:absolute;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;background:var(--panel);border:1px solid var(--line);display:grid;place-items:center;color:var(--ink-2);box-shadow:var(--shadow)}
+.nav-arrow.l{left:16px}.nav-arrow.r{right:16px}
+
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,12px);opacity:0;background:var(--ink);color:var(--bg);padding:10px 15px;border-radius:11px;font-size:13px;font-weight:500;display:flex;gap:9px;align-items:center;transition:opacity .22s,transform .28s cubic-bezier(.2,.8,.2,1);pointer-events:none;z-index:95;box-shadow:var(--shadow-lg);max-width:calc(100% - 32px)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.err{background:var(--danger);color:#fff}
+.toast svg{width:15px;height:15px}
+
+.tabbar{display:none}
+@media (max-width:1000px){
+  .home-grid,.set-grid{grid-template-columns:minmax(0,1fr)}
+  .md{grid-template-columns:minmax(0,320px) minmax(0,1fr)}
+  .phone3d{display:none}
+}
+@media (max-width:760px){
+  .shell{grid-template-columns:1fr}
+  .side{display:none}
+  .top{padding:0 14px;gap:8px}
+  .top .mlogo{display:flex;padding:0;margin-right:auto}
+  .top .mstatus{display:grid}
+  .searchbtn{width:auto;border:0;background:none;padding:0;height:32px}
+  .searchbtn span,.searchbtn kbd{display:none}
+  .content{padding:18px 14px calc(84px + env(safe-area-inset-bottom))}
+  .page-head h1{font-size:21px}
+  .hero-art.img{width:96px;height:72px}.hero-art{width:56px;height:56px}
+  .md,.notes{grid-template-columns:minmax(0,1fr);height:auto;min-height:0}
+  .md .md-detail,.notes .neditor{display:none}
+  .md.open .md-list,.notes.open .nlist{display:none}
+  .md.open .md-detail{display:flex}
+  .notes.open .neditor{display:flex}
+  .md-list,.nlist{border-right:0}
+  .d-top .back,.ne-top .back{display:inline-grid}
+  .d-top .to{display:none!important}
+  .d-top{padding:10px 12px}
+  .d-body{padding:18px}
+  .d-info{padding:12px 18px 6px;grid-template-columns:110px 1fr}
+  .d-acts{padding:12px 18px 16px;flex-wrap:wrap}
+  .neditor{padding:14px 18px 20px}
+  .thead{display:none}
+  .tr{grid-template-columns:minmax(0,1fr) 36px}
+  .tmod,.tsize{display:none}
+  .phone-card{flex-direction:column;align-items:flex-start}
+  .dz{grid-template-columns:1fr}.dz>div{height:140px}
+  .modal{padding:0}.sheet{height:100%;border-radius:0}.nav-arrow{display:none}
+  .help{left:14px;right:14px;width:auto;bottom:90px}
+  .palette-wrap{padding-top:10px}
+  .tabbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:40;background:color-mix(in srgb,var(--panel) 90%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
+  .tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 0;font-size:11px;font-weight:500;color:var(--muted);position:relative}
+  .tabbar button svg{width:21px;height:21px}
+  .tabbar button.on{color:var(--ink)}
+  .tabbar .badge{position:absolute;top:1px;left:calc(50% + 6px);min-width:16px;height:16px;border-radius:99px;background:var(--accent);color:#fff;font-size:10px;font-weight:600;display:grid;place-items:center;padding:0 4px}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side">
+    <div class="logo"><span class="mark" data-i="logo"></span>Shared Hub</div>
+    <a class="nav" href="#home" data-page="home"><span data-i="home"></span>Home</a>
+    <a class="nav" href="#clipboard" data-page="clipboard"><span data-i="clip"></span>Clipboard<span class="badge" id="navBadge" hidden></span></a>
+    <a class="nav" href="#files" data-page="files"><span data-i="folder"></span>Files</a>
+    <a class="nav" href="#notes" data-page="notes"><span data-i="note"></span>Notes</a>
+    <div class="side-label">Devices</div>
+    <div id="sideDevices"></div>
+    <div class="spacer"></div>
+    <a class="nav" href="#settings" data-page="settings"><span data-i="settings"></span>Settings</a>
+    <button class="nav" id="helpBtn"><span data-i="help"></span>Help</button>
+  </aside>
+
+  <div class="main">
+    <header class="top">
+      <div class="logo mlogo"><span class="mark" data-i="logo"></span>Shared Hub</div>
+      <button class="searchbtn" id="searchBtn" title="Search"><span data-i="search"></span><span>Search clips, files and notes</span><kbd id="kKey">⌘K</kbd></button>
+      <a class="icon mstatus" href="#settings" title="Devices"><i class="dot" id="mDot"></i></a>
+    </header>
+    <div class="content" id="content">
+
+      <!-- HOME -->
+      <section class="page" id="page-home" hidden>
+        <div class="page-head"><div><h1 id="greeting">Hello</h1><p id="homeSub">Here's what's happening across your devices.</p></div></div>
+        <div class="card sendbar" data-sendbar>
+          <textarea rows="1" placeholder="Type or paste to send…" aria-label="Text to send"></textarea>
+          <div class="sb-acts">
+            <button class="icon sb-private" title="Private: hidden until hovered, deleted after 10 minutes"><span data-i="lock"></span></button>
+            <button class="icon sb-attach" title="Attach files"><span data-i="attach"></span></button>
+            <button class="btn primary sb-send" disabled>Send <kbd>↵</kbd></button>
+          </div>
+        </div>
+        <div class="qa">
+          <button class="btn" id="qaClipboard"><span data-i="clip"></span>Send clipboard</button>
+          <button class="btn" id="qaAttach"><span data-i="attach"></span>Send files</button>
+          <button class="btn" id="qaNote"><span data-i="plus"></span>New note</button>
+          <button class="btn" id="qaUpload"><span data-i="upload"></span>Upload to folder</button>
+        </div>
+        <div class="home-grid">
+          <div class="card hero reveal-host" id="hero"></div>
+          <div class="card">
+            <div class="card-h"><h2>Recent</h2><a class="aside" href="#clipboard">View all</a></div>
+            <div class="clist" id="homeClips"></div>
+          </div>
+        </div>
+        <div class="card" id="homeFiles" style="margin-top:16px" hidden>
+          <div class="card-h"><h2>Recently added files</h2><a class="aside" href="#files" id="homeFilesAll">View all</a></div>
+          <div class="shelf" id="homeShelf"></div>
+        </div>
+      </section>
+
+      <!-- CLIPBOARD -->
+      <section class="page" id="page-clipboard" hidden>
+        <div class="page-head"><div><h1>Clipboard</h1><p>Everything shared between your devices.</p></div><div class="grow"></div>
+          <div class="seg" id="clipSeg"><button data-f="all" class="on">All</button><button data-f="in">Received <em id="cntIn"></em></button><button data-f="out">Sent <em id="cntOut"></em></button><button data-f="pin">Pinned</button></div>
+          <button class="icon" id="clipMore" data-menu title="More"><span data-i="more"></span></button>
+        </div>
+        <div class="card sendbar" data-sendbar>
+          <textarea rows="1" placeholder="Type or paste to send…" aria-label="Text to send"></textarea>
+          <div class="sb-acts">
+            <button class="icon sb-private" title="Private: hidden until hovered, deleted after 10 minutes"><span data-i="lock"></span></button>
+            <button class="icon sb-attach" title="Attach files"><span data-i="attach"></span></button>
+            <button class="btn primary sb-send" disabled>Send <kbd>↵</kbd></button>
+          </div>
+        </div>
+        <div class="card md" id="md">
+          <div class="md-list" id="clipList"></div>
+          <div class="md-detail reveal-host" id="clipDetail"></div>
+        </div>
+      </section>
+
+      <!-- FILES -->
+      <section class="page" id="page-files" hidden>
+        <div class="page-head"><div><h1>Files</h1><p>Everything in the shared folder.</p></div><div class="grow"></div>
+          <button class="btn" id="mkdirBtn"><span data-i="newfolder"></span>New folder</button>
+          <button class="btn primary" id="uploadBtn"><span data-i="upload"></span>Upload</button>
+        </div>
+        <div class="card">
+          <div class="ftool"><nav class="crumbs" id="crumbs"></nav><div class="grow"></div>
+            <div class="seg" id="fileSeg"><button data-m="browse" class="on">Folder</button><button data-m="recent">Recent</button></div></div>
+          <div class="table" id="fileTable"></div>
+        </div>
+      </section>
+
+      <!-- NOTES -->
+      <section class="page" id="page-notes" hidden>
+        <div class="page-head"><div><h1>Notes</h1><p>Notes that sync between your computers.</p></div><div class="grow"></div>
+          <button class="btn primary" id="newNote"><span data-i="plus"></span>New note</button>
+        </div>
+        <div class="card notes" id="notesCard">
+          <div class="nlist" id="noteItems"></div>
+          <div class="neditor" id="neditor"></div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="page" id="page-settings" hidden>
+        <div class="page-head"><div><h1>Settings</h1><p>Appearance, devices and phone access.</p></div></div>
+        <div class="set-grid">
+          <div class="stack">
+            <div class="card">
+              <div class="card-h"><h2>Appearance</h2></div>
+              <div class="theme-opts" id="themeOpts">
+                <button data-theme-opt="light"><span class="swatch"><i class="sw-l"><b></b><b></b><b></b></i></span>Light</button>
+                <button data-theme-opt="dark"><span class="swatch"><i class="sw-d"><b></b><b></b><b></b></i></span>Dark</button>
+                <button data-theme-opt="system"><span class="swatch"><i class="sw-l"><b></b><b></b><b></b></i><i class="sw-d"><b></b><b></b><b></b></i></span>Match system</button>
+              </div>
+            </div>
+            <div class="card"><div class="card-h"><h2>More actions</h2></div><div class="mlist" id="moreActions"></div></div>
+          </div>
+          <div class="card"><div class="card-h"><h2>Devices</h2><span class="aside" id="syncAside"></span></div><div id="devRows"></div></div>
+          <div class="card" id="phoneCard"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<nav class="tabbar" id="tabbar">
+  <button data-page="home"><span data-i="home"></span>Home</button>
+  <button data-page="clipboard"><span data-i="clip"></span>Clipboard<span class="badge" id="tabBadge" hidden></span></button>
+  <button data-page="files"><span data-i="folder"></span>Files</button>
+  <button data-page="notes"><span data-i="note"></span>Notes</button>
+</nav>
+<input type="file" id="attachInput" multiple hidden>
+<input type="file" id="fileInput" multiple hidden>
+<div class="progress" id="progress"></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const svg = d => `<svg viewBox="0 0 24 24">${d}</svg>`;
+const I = {
+  logo: svg('<rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6.5A2.5 2.5 0 0 0 13.5 4h-7A2.5 2.5 0 0 0 4 6.5v7A2.5 2.5 0 0 0 6.5 16H8"/>'),
+  home: svg('<path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1z"/>'),
+  clip: svg('<rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h1.5A2.5 2.5 0 0 1 20 7.5v11a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 18.5v-11A2.5 2.5 0 0 1 6.5 5H8"/>'),
+  folder: svg('<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>'),
+  newfolder: svg('<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM12 10.5v5M9.5 13h5"/>'),
+  note: svg('<path d="M6 3.5h9l4 4V20a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z"/><path d="M14.5 3.5V8h4.5M8.5 12.5h7M8.5 16h5"/>'),
+  settings: svg('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'),
+  help: svg('<circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.4a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.1-2.4 3.6M12 16.6h.01"/>'),
+  plus: svg('<path d="M12 5v14M5 12h14"/>'),
+  mac: svg('<rect x="4" y="5" width="16" height="11" rx="1.5"/><path d="M2 19h20"/>'),
+  windows: svg('<rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/>'),
+  linux: svg('<rect x="3" y="4" width="18" height="13" rx="2"/><path d="M7 9l2.5 2L7 13M12 13h4M8 20h8"/>'),
+  phone: svg('<rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M11 18h2"/>'),
+  copy: svg('<rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6.5A2.5 2.5 0 0 0 13.5 4h-7A2.5 2.5 0 0 0 4 6.5v7A2.5 2.5 0 0 0 6.5 16H8"/>'),
+  check: svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
+  trash: svg('<path d="M4 7h16M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/>'),
+  pin: svg('<path d="M12 17v5M8 3h8l-1 6 3 3v2H6v-2l3-3z"/>'),
+  download: svg('<path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M4 20h16"/>'),
+  upload: svg('<path d="M12 15V4M7.5 8.5L12 4l4.5 4.5M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>'),
+  edit: svg('<path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4"/>'),
+  open: svg('<path d="M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/>'),
+  reveal: svg('<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M12 10.5v5M9.8 13.3L12 15.5l2.2-2.2"/>'),
+  lock: svg('<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>'),
+  send: svg('<path d="M4.5 12L20 4.5 15 20l-3.2-6.3zM11.8 13.7L20 4.5"/>'),
+  attach: svg('<path d="M20 11.5l-7.8 7.8a5 5 0 0 1-7-7L13 4.5a3.3 3.3 0 0 1 4.7 4.7l-7.8 7.8a1.7 1.7 0 0 1-2.4-2.4l7.1-7.1"/>'),
+  search: svg('<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/>'),
+  more: svg('<circle cx="5.5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="18.5" cy="12" r="1"/>'),
+  x: svg('<path d="M6 6l12 12M18 6L6 18"/>'),
+  left: svg('<path d="M15 6l-6 6 6 6"/>'),
+  right: svg('<path d="M9 6l6 6-6 6"/>'),
+  arrow: svg('<path d="M5 12h14M13 6l6 6-6 6"/>'),
+  alert: svg('<circle cx="12" cy="12" r="8.5"/><path d="M12 8v5M12 16h.01"/>'),
+  clock: svg('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'),
+  sync: svg('<path d="M20 12a8 8 0 0 1-14 5.3M4 12a8 8 0 0 1 14-5.3"/><path d="M18 3v4h-4M6 21v-4h4"/>'),
+  sun: svg('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),
+};
+$$('[data-i]').forEach(el => { el.outerHTML = I[el.dataset.i] ? (el.className ? `<span class="${el.className}">${I[el.dataset.i]}</span>` : I[el.dataset.i]) : ''; });
+
+const A = n => `<img class="i3d" src="/assets/${n}.png" alt="" draggable="false" onerror="this.style.visibility='hidden'">`;
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const store = {get: k => { try { return localStorage.getItem(k); } catch { return null; } },
+               set: (k, v) => { try { localStorage.setItem(k, v); } catch {} }};
+const devIcon = d => d === 'Mac' ? I.mac : d === 'Windows' ? I.windows : d === 'Linux' ? I.linux : I.phone;
+const dev3d = d => d === 'Mac' ? A('mac') : d === 'Windows' ? A('windows') : d === 'Linux' ? A('linux') : I.phone;
+
+/* ---------- theme (default: match system, saved per browser) ---------- */
+let themePref = store.get('hub.theme') || 'system';
+const darkQuery = matchMedia('(prefers-color-scheme: dark)');
+function applyTheme(pref) {
+  const dark = pref === 'dark' || (pref === 'system' && darkQuery.matches);
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  $('#themeColor').content = dark ? '#0e1013' : '#f7f7f8';
+  $$('#themeOpts button').forEach(b => b.classList.toggle('on', b.dataset.themeOpt === pref));
+}
+applyTheme(themePref);
+darkQuery.addEventListener('change', () => { if (themePref === 'system') applyTheme('system'); });
+$('#themeOpts').onclick = e => { const b = e.target.closest('button'); if (!b) return; themePref = b.dataset.themeOpt; store.set('hub.theme', themePref); applyTheme(themePref); };
+
+/* ---------- state ---------- */
+let me = {}, BUILD = null, needReload = false, online = true, syncData = null, page = 'home';
+let clipState = {version: null, clips: []}, seenClips = null, selClip = null, clipFilter = 'all', unseen = 0, revealed = new Set();
+let heroIdx = 0, isPrivate = false;
+let noteState = {version: null, notes: []}, openNoteId = store.get('hub.note'), noteTimer = null, noteSaving = false, noteBase = null;
+let cwd = '', fileMode = 'browse', lastFiles = '', fileItems = [], myUploads = new Set(), highlight = null, recentItems = [];
+let prevSeen = +store.get('hub.seen') || Date.now();
+const canReadClipboard = () => window.isSecureContext && !!navigator.clipboard?.readText;
+const peer = () => syncData?.ok ? syncData.peers[0] : null;
+const peerName = () => peer()?.label || 'your other devices';
+const apple = () => ['Mac', 'iPhone', 'iPad'].includes(me.device);
+const fm = () => me.host === 'Windows' ? 'Explorer' : me.host === 'Mac' ? 'Finder' : 'Files';
+
+/* ---------- basics ---------- */
+async function api(path, opts = {}) {
+  const r = await fetch(path, {...opts, headers: {'X-Hub': '1', ...(typeof opts.body === 'string' ? {'Content-Type': 'application/json'} : {})}});
+  const b = r.headers.get('X-Build');
+  if (b) { if (!BUILD) BUILD = b; else if (b !== BUILD) needReload = true; }
+  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || `Request failed (${r.status})`);
+  return r.json();
+}
+const post = (p, b, m = 'POST') => api(p, {method: m, body: JSON.stringify(b)});
+let toastT;
+function toast(msg, icon = I.check, err = false) {
+  const t = $('#toast'); t.innerHTML = icon + '<span>' + esc(msg) + '</span>'; t.classList.toggle('err', err); t.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), err ? 3400 : 1800);
+}
+addEventListener('unhandledrejection', e => toast(e.reason?.message || 'Something went wrong', I.alert, true));
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; } catch {}
+  const ta = Object.assign(document.createElement('textarea'), {value: text});
+  ta.style.cssText = 'position:fixed;opacity:0'; document.body.append(ta); ta.select();
+  const ok = document.execCommand('copy'); ta.remove(); return ok;
+}
+async function copyImage(url) {
+  const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+  const c = Object.assign(document.createElement('canvas'), {width: img.naturalWidth, height: img.naturalHeight});
+  c.getContext('2d').drawImage(img, 0, 0);
+  const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+  await navigator.clipboard.write([new ClipboardItem({'image/png': blob})]);
+}
+function ago(ms) {
+  const s = (Date.now() - ms) / 1000;
+  if (s < 45) return 'just now';
+  if (s < 3600) return Math.max(1, Math.round(s / 60)) + ' min ago';
+  if (s < 86400) return Math.round(s / 3600) + ' hr ago';
+  return dateTime(ms);
+}
+function dateTime(ms) {
+  const d = new Date(ms), t = new Date(); t.setHours(0, 0, 0, 0);
+  const diff = Math.round((t - new Date(d).setHours(0, 0, 0, 0)) / 864e5), time = d.toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
+  return diff <= 0 ? 'Today, ' + time : diff === 1 ? 'Yesterday, ' + time : d.toLocaleDateString([], {month: 'short', day: 'numeric', year: d.getFullYear() === t.getFullYear() ? undefined : 'numeric'});
+}
+const fullDate = ms => new Date(ms).toLocaleString([], {weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'});
+const size = b => b == null ? '—' : b < 1024 ? b + ' B' : b < 1048576 ? (b / 1024).toFixed(b < 10240 ? 1 : 0) + ' KB' : b < 1073741824 ? (b / 1048576).toFixed(1) + ' MB' : (b / 1073741824).toFixed(2) + ' GB';
+const linkify = s => esc(s).replace(/https?:\/\/[^\s<]+[^\s<.,;:!?)"'\]]/g, u => `<a href="${u}" target="_blank" rel="noopener">${u}</a>`);
+const fileUrl = (p, dl) => '/f/' + p.split('/').map(encodeURIComponent).join('/') + (dl ? '?dl=1' : '');
+const kindOf = n => {
+  const e = (n.split('.').pop() || '').toLowerCase();
+  if (/^(png|jpe?g|gif|webp|heic|svg|bmp|avif|ico)$/.test(e)) return 'image';
+  if (/^(mp4|mov|webm|m4v)$/.test(e)) return 'video';
+  if (/^(mp3|wav|m4a|aac|ogg|flac)$/.test(e)) return 'audio';
+  if (e === 'pdf') return 'pdf';
+  if (/^(js|mjs|ts|tsx|jsx|py|css|scss|html?|json|xml|ya?ml|toml|sh|zsh|bat|ps1|swift|kt|java|c|cc|cpp|h|hpp|m|go|rs|rb|php|sql|gradle|plist)$/.test(e)) return 'code';
+  if (/^(txt|md|markdown|csv|tsv|log|ini|conf|cfg|env|srt|vtt|rtf)$/.test(e) || !n.includes('.')) return 'text';
+  if (/^(docx?|pages|odt|xlsx?|numbers|pptx?|key)$/.test(e)) return 'doc';
+  return 'other';
+};
+const kind3d = n => A({image: 'image', video: 'video', audio: 'audio', pdf: 'pdf', code: 'code', text: 'text', doc: 'doc'}[kindOf(n)] || 'other');
+const kindLabel = n => ({image: 'Image', video: 'Video', audio: 'Audio', pdf: 'PDF', code: 'Code', text: 'Text file', doc: 'Document'}[kindOf(n)] || 'File');
+let dlgOpen = false;
+function confirmDialog({title, body, preview, action = 'Delete'}) {
+  return new Promise(resolve => {
+    closeMenus(); dlgOpen = true;
+    const w = document.createElement('div'); w.className = 'dlg-wrap';
+    w.innerHTML = `<div class="dlg" role="alertdialog" aria-modal="true" aria-labelledby="dlgT" aria-describedby="dlgB">
+      <div class="dlg-ic">${I.trash}</div><h3 id="dlgT">${esc(title)}</h3><p id="dlgB">${esc(body)}</p>
+      ${preview ? `<div class="dlg-prev">${preview}</div>` : ''}
+      <div class="dlg-acts"><button class="btn lg" data-r="">Cancel</button><button class="btn lg destroy" data-r="1">${esc(action)}</button></div></div>`;
+    const done = ok => { w.remove(); dlgOpen = false; document.removeEventListener('keydown', key, true); resolve(ok); };
+    const key = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); done(false); } else if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); done(true); } };
+    w.onclick = e => { if (e.target === w) return done(false); const b = e.target.closest('[data-r]'); if (b) done(!!b.dataset.r); };
+    document.addEventListener('keydown', key, true);
+    document.body.append(w); w.querySelector('.destroy').focus();
+  });
+}
+const trashName = () => me.host === 'Windows' ? 'Recycle Bin' : 'Trash';
+const prevLine = (icon, text) => `${icon}<span>${esc(text)}</span>`;
+function clipConfirm(c) {
+  if (c.kind === 'file') return {title: 'Delete this clip and its file?', body: `The file moves to the ${trashName()} and disappears from Inbox on all your devices.`, preview: prevLine(kind3d(c.name), c.name)};
+  return {title: 'Delete this clip?', body: 'It will be removed from the clipboard on all your devices.', preview: prevLine(A(c.sensitive ? 'lock' : isUrl(c.text) ? 'link' : 'clipboard'), c.sensitive ? 'Private clip' : clipTitle(c))};
+}
+const fileConfirm = f => ({title: `Move ${f.dir ? 'this folder' : 'this file'} to the ${trashName()}?`, action: `Move to ${trashName()}`,
+  body: f.dir ? `The folder and everything in it will also be removed from your other devices.` : `It will also be removed from your other devices.`, preview: prevLine(f.dir ? A('folder') : kind3d(f.name), f.name)});
+const noteConfirm = n => ({title: 'Delete this note?', body: 'It will be removed from all your devices.', preview: prevLine(A('note'), noteTitle(n))});
+const clearConfirm = () => ({title: 'Clear clipboard history?', action: 'Clear history', body: `Removes every clip except pinned ones, on all your devices. Files sent through the clipboard move to the ${trashName()}.`});
+function flashButton(btn, label = 'Copied') {
+  if (!btn || btn.classList.contains('done')) return; const html = btn.innerHTML; btn.classList.add('done'); btn.innerHTML = I.check + label;
+  setTimeout(() => { btn.classList.remove('done'); btn.innerHTML = html; }, 1400);
+}
+const inField = t => !!t.closest?.('input, textarea, [contenteditable]');
+
+/* ---------- router ---------- */
+const PAGES = ['home', 'clipboard', 'files', 'notes', 'settings'];
+function route() {
+  const h = location.hash.slice(1).replace(/^devices$/, 'settings');
+  page = PAGES.includes(h) ? h : 'home';
+  PAGES.forEach(p => $('#page-' + p).hidden = p !== page);
+  $$('[data-page]').forEach(el => el.classList.toggle('on', el.dataset.page === page));
+  $('#content').scrollTop = 0; closeMenus();
+  if (page === 'clipboard') { unseen = 0; updateBadge(); renderClips(); }
+  if (page === 'files') { lastFiles = ''; loadFiles(true); }
+  if (page === 'notes') renderNotes();
+  if (page === 'settings') renderSettings();
+}
+addEventListener('hashchange', route);
+$('#tabbar').onclick = e => { const b = e.target.closest('button'); if (b) location.hash = b.dataset.page; };
+
+/* ---------- menus ---------- */
+function closeMenus() { $$('.menu,.help').forEach(m => m.remove()); }
+function openMenu(anchor, items) {
+  closeMenus();
+  const m = document.createElement('div'); m.className = 'menu';
+  m.innerHTML = items.map((it, i) => it === '-' ? '<hr>' : it.href
+    ? `<a href="${it.href}" ${it.dl ? '' : 'target="_blank"'} data-i="${i}">${it.icon}<span>${esc(it.label)}</span></a>`
+    : `<button data-i="${i}" class="${it.danger ? 'danger' : ''}">${it.icon}<span>${esc(it.label)}</span></button>`).join('');
+  document.body.append(m);
+  const r = anchor.getBoundingClientRect(), mw = m.offsetWidth, mh = m.offsetHeight;
+  m.style.left = Math.max(8, Math.min(r.right - mw, innerWidth - mw - 8)) + 'px';
+  m.style.top = (r.bottom + 6 + mh > innerHeight ? r.top - mh - 6 : r.bottom + 6) + 'px';
+  m.onclick = async e => {
+    e.stopPropagation();
+    const el = e.target.closest('[data-i]'); if (!el) return;
+    const it = items[+el.dataset.i];
+    if (it.href) return setTimeout(closeMenus, 50);
+    closeMenus();
+    if (it.confirm && !(await confirmDialog(it.confirm))) return;
+    it.run();
+  };
+}
+document.addEventListener('click', e => { if (!e.target.closest('.menu,.help,[data-menu],#helpBtn')) closeMenus(); });
+
+/* ---------- devices & sync ---------- */
+function syncState() {
+  const s = syncData;
+  if (!online) return ['bad', 'Hub offline'];
+  if (!s || !s.ok) return ['', s?.reason || 'Checking…'];
+  if (s.errors) return ['bad', 'Sync errors'];
+  if (s.receiving || s.peers.some(p => p.connected && p.need) || (s.state && s.state !== 'idle')) return ['busy', 'Syncing…'];
+  const off = s.peers.filter(p => !p.connected);
+  if (off.length && off.length === s.peers.length) return ['', off.some(p => p.need) ? `Waiting for ${off[0].label}` : `${off[0].label} offline`];
+  return ['ok', 'Up to date'];
+}
+function devices() {
+  const s = syncData, rows = [{name: me.host, sub: me.local ? 'This device' : 'Serving this page', cls: online ? 'ok' : 'bad', state: online ? 'Online' : 'Offline'}];
+  if (s?.ok) for (const p of s.peers) {
+    const seen = p.lastSeen ? `Last seen ${dateTime(Date.parse(p.lastSeen)).replace(/^Today, /, 'today ').replace(/^Yesterday, /, 'yesterday ')}` : 'Not seen yet';
+    rows.push({name: p.label, full: p.name, sub: p.connected ? (p.need ? `Syncing ${p.need} items` : 'Up to date') : `Offline${p.need ? ` · ${p.need} waiting` : ''}`, detail: p.connected ? '' : seen,
+               cls: p.connected ? (p.need ? 'busy' : 'ok') : '', state: p.connected ? 'Online' : 'Offline'});
+  }
+  if (!me.local) rows.push({name: me.device, sub: 'You, right now', cls: 'ok', state: 'Online'});
+  return rows;
+}
+function renderDevices() {
+  const rows = devices();
+  $('#sideDevices').innerHTML = rows.map(r => `<a class="sdev" href="#settings" title="${esc(r.detail || r.sub)}"><i class="dot ${r.cls}"></i><span><b>${esc(r.name)}</b><small>${esc(r.sub)}</small></span></a>`).join('');
+  const [cls] = syncState(); $('#mDot').className = 'dot ' + cls;
+  const p = peer();
+  const narrow = matchMedia('(max-width:760px)').matches;
+  $$('[data-sendbar] textarea').forEach(t => t.placeholder = p ? (narrow ? `Send to ${p.label}…` : `Type or paste to send to ${p.label}…`) : 'Type or paste to send…');
+  $('#homeSub').textContent = p && !p.connected ? `${p.label} is offline. Anything you send reaches it when it's back.` : "Here's what's happening across your devices.";
+  if (page === 'settings') renderSettings();
+}
+function renderSettings() {
+  const [cls, text] = syncState();
+  $('#syncAside').innerHTML = `<i class="dot ${cls}"></i>${esc(text)}`;
+  $('#devRows').innerHTML = devices().map(r => `<div class="devrow"><span class="dev3d">${dev3d(r.name)}</span><div><b>${esc(r.name)}${r.full && r.full !== r.name ? ` <span style="color:var(--muted);font-weight:400;font-size:12px">${esc(r.full)}</span>` : ''}</b><small>${esc([r.sub, r.detail].filter(Boolean).join(' · '))}</small></div>
+    <span class="state"><i class="dot ${r.cls}"></i>${r.state}</span></div>`).join('');
+  if (!$('#phoneCard').dataset.done) {
+    $('#phoneCard').dataset.done = 1;
+    $('#phoneCard').innerHTML = me.link ? `<div class="phone-card"><div class="qr" id="qr"></div>
+      <div style="flex:1;min-width:0"><h3>Open on your phone</h3><p>Scan with your phone's camera to get the full app. Your phone needs to be on the same Wi-Fi.</p>
+      <div class="linkline">${esc(me.link)}</div><button class="btn" id="copyLink">${I.copy}Copy link</button></div>
+      <div class="phone3d" aria-hidden="true"><div class="p-body"><div class="p-screen"><span class="p-island"></span><div class="p-app">
+        <div class="p-top"><span class="mark">${I.logo}</span>Shared Hub</div>
+        <div class="p-card"><small>LATEST FROM ${esc(me.host.toUpperCase())}</small><b>Project notes for tomorrow</b><i>Copy</i></div>
+        <div class="p-row">${A('clipboard')}<span><i></i><i></i></span></div>
+        <div class="p-row">${A('folder')}<span><i></i><i></i></span></div>
+        <div class="p-row">${A('note')}<span><i></i><i></i></span></div>
+        <span class="p-bar"></span></div></div></div></div></div>`
+      : `<div class="card-h"><h2>Phone access</h2></div><div class="empty" style="padding-top:8px"><p>Open Shared Hub on the computer itself to get the QR code for your phone.</p></div>`;
+    if (me.link) { drawQR(); $('#copyLink').onclick = async e => { if (await copyText(me.link)) flashButton(e.currentTarget, 'Copied'); }; }
+    const acts = [`<button id="actClear">${I.trash}<span>Clear clipboard history</span></button>`];
+    if (me.local) acts.push(`<button id="actReveal">${I.reveal}<span>Show shared folder in ${fm()}</span></button>`);
+    $('#moreActions').innerHTML = acts.join('');
+    $('#actClear').onclick = async () => { if (await confirmDialog(clearConfirm())) clearClips(); };
+    if (me.local) $('#actReveal').onclick = () => post('/api/reveal', {path: ''});
+  }
+}
+async function loadSync() { try { syncData = await api('/api/sync'); } catch {} renderDevices(); if (clipState.version) { renderHomeClips(); if (page === 'clipboard') renderDetail(); } }
+let qrLib;
+function drawQR() {
+  qrLib ||= new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js'; s.onload = res; s.onerror = rej; document.head.append(s); });
+  qrLib.then(() => { const q = qrcode(0, 'M'); q.addData(me.link); q.make(); const el = $('#qr'); if (el) el.innerHTML = q.createSvgTag({cellSize: 4, margin: 0, scalable: true}); })
+       .catch(() => { const el = $('#qr'); if (el) el.innerHTML = `<span style="color:#888;font-size:12px;text-align:center">QR needs internet. Use the link.</span>`; });
+}
+
+/* ---------- clip helpers ---------- */
+const isIncoming = c => c.fromId ? c.fromId !== me.id : c.from !== me.device;   // by device ID, so two Macs stay distinct
+const isUrl = t => /^https?:\/\/\S+$/.test(t.trim());
+const looksCode = t => /[{};<>]|^\s{2,}|\t/m.test(t) && t.includes('\n');
+function urlParts(t) { try { const u = new URL(t.trim()); return {host: u.hostname.replace(/^www\./, ''), path: decodeURIComponent(u.pathname.split('/').filter(Boolean).pop() || '').replace(/[-_]/g, ' ')}; } catch { return {host: t, path: ''}; } }
+function clipTitle(c) {
+  if (c.kind === 'file') return c.name;
+  if (isUrl(c.text)) { const u = urlParts(c.text); return u.host + (u.path ? ' · ' + u.path : ''); }
+  return (c.text.trim().split('\n').find(l => l.trim()) || '').trim().slice(0, 160);
+}
+const canCopy = c => c.kind !== 'file' || (c.exists && kindOf(c.name) === 'image' && window.ClipboardItem && isSecureContext);
+async function copyClip(c) { if (c.kind === 'file') await copyImage(fileUrl(c.path)); else if (!await copyText(c.text)) throw new Error("Couldn't copy"); }
+function delivery(c) {        // did my latest clip reach the other computer?
+  const mine = clipState.clips.find(x => !isIncoming(x)), p = peer();
+  if (!mine || mine.id !== c.id || !p || Date.now() - c.at > 3600e3) return null;
+  if (!p.connected) return {cls: '', icon: I.clock, text: `Waiting for ${p.label} to come online`, short: `Waiting for ${p.label}`};
+  if (p.need) return {cls: '', icon: I.sync, text: `Syncing to ${p.label}…`, short: 'Syncing…'};
+  return {cls: 'ok', icon: I.check, text: `On ${p.label}`, short: `On ${p.label}`};
+}
+const leftMin = c => Math.max(1, Math.ceil((c.expires - Date.now()) / 60000));
+const blurCls = c => c.sensitive ? ' blur' + (revealed.has(c.id) ? ' reveal' : '') : '';
+function previewBody(c) {      // the content itself is the preview
+  if (c.kind === 'file') {
+    if (c.exists && kindOf(c.name) === 'image') return `<img class="ci-img" loading="lazy" src="${fileUrl(c.path)}" alt="${esc(c.name)}">`;
+    return `<div class="ci-link">${kind3d(c.name)}<span style="min-width:0"><b>${esc(c.name)}</b><small>${c.exists ? size(c.size) : 'Arriving…'}</small></span></div>`;
+  }
+  if (c.sensitive && !revealed.has(c.id)) return `<div class="ci-link">${A('lock')}<span style="min-width:0"><b class="blur">${esc(clipTitle(c))}</b><small>Private · hidden until you hover</small></span></div>`;
+  if (isUrl(c.text)) { const u = urlParts(c.text); return `<div class="ci-link">${A('link')}<span style="min-width:0"><b>${esc(u.path || u.host)}</b><small>${esc(u.host)}</small></span></div>`; }
+  return `<div class="ci-text${looksCode(c.text) ? ' mono' : ''}">${esc(c.text.trim().replace(/\n\s*\n+/g, '\n').slice(0, 400))}</div>`;
+}
+/* hover quick actions: one definition per item type, used by the hover bar and the touch menu */
+function actBar(acts) {
+  return `<div class="hover-acts">${acts.map(a => `<button class="icon qa-full${a.on ? ' on' : ''}${a.danger ? ' danger' : ''}" data-qa="${a.id}" title="${esc(a.label)}">${a.icon}</button>`).join('')}<button class="icon qa-more" data-qa="more" data-menu title="More">${I.more}</button></div>`;
+}
+async function runAct(acts, id, btn) {
+  if (id === 'more') return openMenu(btn, acts.map(a => ({icon: a.icon, label: a.label, danger: a.danger, confirm: a.confirm, href: a.href, dl: a.dl, run: a.run})));
+  const a = acts.find(x => x.id === id); if (!a) return;
+  if (a.confirm && !(await confirmDialog(a.confirm))) return;
+  if (a.href) { const l = Object.assign(document.createElement('a'), {href: a.href}); if (a.dl) l.download = ''; else { l.target = '_blank'; l.rel = 'noopener'; } l.click(); return; }
+  await a.run(btn);
+}
+function flashIcon(btn) { if (!btn) return; const h = btn.innerHTML; btn.classList.add('done'); btn.innerHTML = I.check; setTimeout(() => { btn.classList.remove('done'); btn.innerHTML = h; }, 1200); }
+function clipActs(c) {
+  const acts = [];
+  if (canCopy(c)) acts.push({id: 'copy', icon: I.copy, label: 'Copy', run: async b => { await copyClip(c); flashIcon(b); toast(c.kind === 'file' ? 'Image copied' : 'Copied'); }});
+  if (c.kind === 'file' && c.exists) acts.push({id: 'dl', icon: I.download, label: 'Download', href: fileUrl(c.path, 1), dl: true});
+  if (c.kind === 'file' && c.exists && kindOf(c.name) !== 'image') acts.push({id: 'prev', icon: I.open, label: 'Preview', run: () => openPreview([c], 0)});
+  if (c.kind !== 'file' && isUrl(c.text)) acts.push({id: 'open', icon: I.open, label: 'Open link', href: c.text.trim()});
+  acts.push({id: 'pin', icon: I.pin, label: c.pinned ? 'Unpin' : 'Pin', on: c.pinned, run: async () => { applyClips(await post('/api/clips/' + c.id, {pinned: !c.pinned}, 'PATCH')); toast(c.pinned ? 'Unpinned' : 'Pinned', I.pin); }});
+  acts.push({id: 'del', icon: I.trash, label: c.kind === 'file' ? 'Delete clip and file' : 'Delete', danger: true, confirm: clipConfirm(c), run: async () => { applyClips(await api('/api/clips/' + c.id, {method: 'DELETE'})); toast('Deleted', I.trash); }});
+  return acts;
+}
+function fileActs(f, {rename} = {}) {
+  const acts = [];
+  if (!f.dir) acts.push({id: 'dl', icon: I.download, label: 'Download', href: fileUrl(f.path, 1), dl: true});
+  if (me.local) acts.push({id: 'reveal', icon: I.reveal, label: `Show in ${fm()}`, run: () => post('/api/reveal', {path: f.path})});
+  if (rename) acts.push({id: 'rename', icon: I.edit, label: 'Rename', run: rename});
+  acts.push({id: 'del', icon: I.trash, label: 'Delete', danger: true, confirm: fileConfirm(f), run: async () => {
+    await post('/api/delete', {path: f.path}); toast(`Moved ${f.name} to ${me.host === 'Windows' ? 'Recycle Bin' : 'Trash'}`, I.trash); lastFiles = ''; loadFiles(true); loadRecent(); }});
+  return acts;
+}
+function noteActs(n) {
+  return [
+    {id: 'copy', icon: I.copy, label: 'Copy note', run: async b => { if (await copyText([n.title, n.body].filter(x => x.trim()).join('\n\n'))) { flashIcon(b); toast('Note copied'); } }},
+    {id: 'del', icon: I.trash, label: 'Delete note', danger: true, confirm: noteConfirm(n), run: async () => {
+      clearTimeout(noteTimer); noteTimer = null; noteState = await api('/api/notes/' + n.id, {method: 'DELETE'});
+      if (openNoteId === n.id) { openNoteId = null; noteBase = null; } renderNotes(); toast('Note deleted', I.trash); }},
+  ];
+}
+
+function clipItemHTML(c, {sel, home} = {}) {
+  const d = delivery(c), isNew = !home && seenClips && !seenClips.has(c.id);
+  return `<div class="ci reveal-host${isIncoming(c) ? ' in' : ''}${sel ? ' sel' : ''}" data-id="${c.id}" role="button" tabindex="-1">
+    <div class="ci-meta"><span class="who">${devIcon(c.from)}${isIncoming(c) ? esc(c.from) : 'You'}</span><span>·</span><span class="num" data-at="${c.at}">${ago(c.at)}</span>
+      ${c.pinned ? `<span class="flag" title="Pinned">${I.pin}</span>` : ''}${c.sensitive ? `<span class="flag" style="color:var(--warn)">${I.lock}${leftMin(c)} min</span>` : ''}${isNew ? '<span class="new"></span>' : ''}</div>
+    ${previewBody(c)}
+    ${d ? `<div class="ci-status ${d.cls}">${d.icon}${esc(d.short)}</div>` : ''}
+    ${actBar(clipActs(c))}
+  </div>`;
+}
+
+/* ---------- sending ---------- */
+async function sendClip(text) {
+  if (!text.trim()) return false;
+  applyClips(await post('/api/clips', {text, sensitive: isPrivate}));
+  toast(isPrivate ? 'Sent privately · gone in 10 minutes' : `Sent to ${peerName()}`, isPrivate ? I.lock : I.check);
+  setPrivate(false); return true;
+}
+async function sendFiles(files) {
+  const done = await upload(files, {inbox: true});
+  for (const f of done) applyClips(await post('/api/clips', {file: f.path}));
+  if (done.length) toast(done.length === 1 ? `Sent ${done[0].name}` : `Sent ${done.length} files`);
+  return done.length;
+}
+async function readSystemClipboard() {
+  const items = navigator.clipboard.read ? await navigator.clipboard.read().catch(() => null) : null;
+  const img = items?.find(i => i.types.some(t => t.startsWith('image/')));
+  if (img) { const t = img.types.find(t => t.startsWith('image/')); return {file: new File([await img.getType(t)], 'image.' + t.split('/')[1], {type: t})}; }
+  return {text: await navigator.clipboard.readText()};
+}
+async function sendFromSystemClipboard() {
+  if (!canReadClipboard()) return toast('Paste with ' + (apple() ? '⌘V' : 'Ctrl+V') + ' instead', I.clip);
+  try { const d = await readSystemClipboard(); d.file ? sendFiles([d.file]) : d.text.trim() ? sendClip(d.text) : toast('Your clipboard is empty', I.clip); }
+  catch { toast('Clipboard access was blocked', I.alert, true); }
+}
+function setPrivate(on) {
+  isPrivate = on;
+  $$('[data-sendbar]').forEach(b => { b.classList.toggle('private', on); const p = b.querySelector('.sb-private'); p.classList.toggle('on', on); p.innerHTML = I.lock + (on ? 'Private' : ''); });
+}
+$$('[data-sendbar]').forEach(bar => {
+  const ta = bar.querySelector('textarea'), send = bar.querySelector('.sb-send');
+  const fit = () => { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 200) + 'px'; send.disabled = !ta.value.trim(); };
+  ta.addEventListener('input', fit);
+  ta.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send.click(); } });
+  send.onclick = async () => { if (await sendClip(ta.value)) { ta.value = ''; fit(); flashButton(send, 'Sent'); } };
+  bar.querySelector('.sb-private').onclick = () => { setPrivate(!isPrivate); ta.focus(); };
+  bar.querySelector('.sb-attach').onclick = () => $('#attachInput').click();
+});
+$('#attachInput').onchange = e => { sendFiles(e.target.files); e.target.value = ''; };
+$('#qaClipboard').onclick = sendFromSystemClipboard;
+$('#qaAttach').onclick = () => $('#attachInput').click();
+$('#qaNote').onclick = () => newNote();
+$('#qaUpload').onclick = () => { location.hash = 'files'; setTimeout(() => $('#fileInput').click(), 60); };
+
+/* ---------- home ---------- */
+const incoming = () => clipState.clips.filter(isIncoming).slice(0, 3);
+function renderHero() {
+  const list = incoming(), el = $('#hero'), p = peer();
+  if (!list.length) {
+    el.innerHTML = `<div class="hero-top">${I.clock}<span>Latest from ${esc(p?.label || 'your other devices')}</span></div>
+      <div class="empty" style="padding:26px 8px 12px"><div class="art">${A('inbox')}</div><h3>Nothing received yet</h3><p>When you send something from ${esc(p?.label || 'another device')}, it appears here, ready to copy.</p></div>`;
+    return;
+  }
+  heroIdx = Math.min(heroIdx, list.length - 1);
+  const c = list[heroIdx];
+  let art, title = clipTitle(c), excerpt = '';
+  if (c.kind === 'file') { art = c.exists && kindOf(c.name) === 'image' ? `<div class="hero-art img" data-prev><img src="${fileUrl(c.path)}" alt=""></div>` : `<div class="hero-art">${kind3d(c.name)}</div>`; excerpt = `${kindLabel(c.name)} · ${c.exists ? size(c.size) : 'arriving…'}`; }
+  else if (isUrl(c.text)) { art = `<div class="hero-art">${A('link')}</div>`; excerpt = c.text.trim(); }
+  else { art = `<div class="hero-art">${c.sensitive ? A('lock') : looksCode(c.text) ? A('code') : A('clipboard')}</div>`; const l = c.text.trim().split('\n'); excerpt = l.slice(l.findIndex(x => x.trim()) + 1).join('\n').trim(); }
+  el.innerHTML = `<div class="hero-top"><span class="who">${devIcon(c.from)}Latest from ${esc(c.from)}</span><span>·</span><span class="num" data-at="${c.at}">${ago(c.at)}</span>
+      ${c.sensitive ? `<span style="color:var(--warn);display:inline-flex;gap:4px;align-items:center">· ${I.lock}Private, ${leftMin(c)} min left</span>` : ''}</div>
+    <div class="hero-body"><div class="hero-text">
+      <p class="hero-title${blurCls(c)}">${esc(title)}</p>${excerpt ? `<p class="hero-excerpt${blurCls(c)}">${esc(excerpt.slice(0, 300))}</p>` : ''}
+    </div>${art}</div>
+    <div class="hero-acts">
+      ${canCopy(c) ? `<button class="btn primary lg" id="heroCopy">${I.copy}Copy <kbd>↵</kbd></button>` : ''}
+      ${c.kind === 'file' && c.exists ? `<a class="btn lg ${canCopy(c) ? '' : 'primary'}" href="${fileUrl(c.path, 1)}">${I.download}Download</a>` : ''}
+      ${isUrl(c.text || '') ? `<a class="btn lg" href="${esc(c.text.trim())}" target="_blank" rel="noopener">${I.open}Open link</a>` : ''}
+      ${list.length > 1 ? `<div class="dots">${list.map((_, i) => `<button data-h="${i}" class="${i === heroIdx ? 'on' : ''}" aria-label="Item ${i + 1}"></button>`).join('')}</div>` : ''}
+    </div>
+    ${actBar(heroActs(c))}`;
+  $('#heroCopy')?.addEventListener('click', e => copyHero(e.currentTarget));
+  el.querySelectorAll('.blur').forEach(b => b.onclick = () => { revealed.add(c.id); el.querySelectorAll('.blur').forEach(x => x.classList.add('reveal')); });
+  el.querySelectorAll('.dots button').forEach(b => b.onclick = () => { heroIdx = +b.dataset.h; renderHero(); renderHomeClips(); });
+  el.querySelector('[data-prev]')?.addEventListener('click', () => openPreview([c], 0));
+}
+function heroActs(c) {
+  const shown = new Set([canCopy(c) && 'copy', c.kind === 'file' && c.exists && 'dl', c.kind !== 'file' && isUrl(c.text) && 'open']);
+  return clipActs(c).filter(a => !shown.has(a.id));
+}
+$('#hero').addEventListener('click', e => {
+  const q = e.target.closest('[data-qa]'); if (!q) return;
+  e.stopPropagation(); const c = incoming()[heroIdx]; if (c) runAct(heroActs(c), q.dataset.qa, q);
+});
+async function copyHero(btn) {
+  const c = incoming()[heroIdx]; if (!c || !canCopy(c)) return;
+  try { await copyClip(c); flashButton(btn || $('#heroCopy')); toast(c.kind === 'file' ? 'Image copied' : 'Copied'); } catch (e) { toast(e.message, I.alert, true); }
+}
+function renderHomeClips() {
+  const hero = incoming()[heroIdx];
+  const list = clipState.clips.filter(c => c !== hero).slice(0, 4);
+  $('#homeClips').innerHTML = list.length ? list.map(c => clipItemHTML(c, {home: true})).join('')
+    : `<div class="empty" style="padding:28px 16px"><p>Nothing sent yet. Paste anywhere with <kbd>${apple() ? '⌘' : 'Ctrl'}</kbd> <kbd>V</kbd>.</p></div>`;
+}
+function clipQuick(e) {       // a hover action on a clip: run it instead of opening the clip
+  const q = e.target.closest('[data-qa]'); if (!q) return false;
+  e.stopPropagation();
+  const c = clipState.clips.find(x => x.id === q.closest('.ci').dataset.id);
+  if (c) runAct(clipActs(c), q.dataset.qa, q);
+  return true;
+}
+$('#homeClips').addEventListener('click', e => { if (clipQuick(e)) return; const it = e.target.closest('.ci'); if (!it) return; selClip = it.dataset.id; location.hash = 'clipboard'; });
+function renderShelf() {
+  const items = recentItems.slice(0, 6);
+  $('#homeFiles').hidden = !items.length;
+  $('#homeShelf').innerHTML = items.map(f => `<div class="ftile" data-path="${esc(f.path)}"><div class="fprev">${kindOf(f.name) === 'image' ? `<img class="thumb" loading="lazy" src="${fileUrl(f.path)}" alt="">` : kind3d(f.name)}${isNewFile(f) ? '<span class="newdot" style="top:6px;right:6px"></span>' : ''}</div>
+    <div><b>${esc(f.name)}</b><small>${esc(f.path.split('/').slice(0, -1).join('/') || me.folder)} · ${ago(f.arrived)}</small></div>${actBar(fileActs(f))}</div>`).join('');
+}
+$('#homeShelf').addEventListener('click', e => {
+  const t = e.target.closest('.ftile'); if (!t) return;
+  const list = recentItems.slice(0, 6), f = list.find(x => x.path === t.dataset.path);
+  const q = e.target.closest('[data-qa]');
+  if (q) { e.stopPropagation(); return f && runAct(fileActs(f), q.dataset.qa, q); }
+  openPreview(list, list.indexOf(f));
+});
+$('#homeFilesAll').onclick = () => setTimeout(() => setMode('recent'), 0);
+function setGreeting() { const h = new Date().getHours(); $('#greeting').textContent = h < 5 ? 'Good evening' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; }
+
+/* ---------- clipboard page (list + detail) ---------- */
+function filteredClips() {
+  const all = clipState.clips;
+  const list = all.filter(c => clipFilter === 'all' || (clipFilter === 'pin' ? c.pinned : (clipFilter === 'in') === isIncoming(c)));
+  return [...list.filter(c => c.pinned), ...list.filter(c => !c.pinned)];
+}
+function renderClips() {
+  const all = clipState.clips, inc = all.filter(isIncoming).length;
+  $('#cntIn').textContent = inc || ''; $('#cntOut').textContent = (all.length - inc) || '';
+  const list = filteredClips();
+  if (!list.find(c => c.id === selClip)) selClip = list[0]?.id || null;
+  $('#clipList').innerHTML = list.length ? list.map(c => clipItemHTML(c, {sel: c.id === selClip})).join('')
+    : `<div class="empty"><div class="art">${A(all.length ? 'search' : 'clipboard')}</div><h3>${all.length ? 'Nothing here' : 'Your shared clipboard is empty'}</h3>
+       <p>${all.length ? 'Try another filter.' : `Press <kbd>${apple() ? '⌘' : 'Ctrl'}</kbd> <kbd>V</kbd> anywhere in Shared Hub to send what you copied.`}</p></div>`;
+  renderDetail();
+  if (page === 'clipboard') seenClips = new Set(all.map(c => c.id));
+}
+function renderDetail() {
+  const box = $('#clipDetail'), c = clipState.clips.find(x => x.id === selClip);
+  if (!c) { box.innerHTML = `<div class="empty" style="margin:auto"><div class="art">${A('clipboard')}</div><h3>Select a clip</h3><p>Its full content and details show here.</p></div>`; return; }
+  const inc = isIncoming(c), d = delivery(c);
+  let body;
+  if (c.kind === 'file') {
+    body = c.exists && kindOf(c.name) === 'image' ? `<img class="big" src="${fileUrl(c.path)}" alt="" data-act="preview">`
+      : `<div class="d-file">${kind3d(c.name)}<div><b>${esc(c.name)}</b><small>${kindLabel(c.name)} · ${c.exists ? size(c.size) : 'still syncing to this device'}</small></div></div>`;
+  } else if (isUrl(c.text)) {
+    const u = urlParts(c.text); body = `<div class="d-link${blurCls(c)}"><b>${esc(u.path || u.host)}</b><a href="${esc(c.text.trim())}" target="_blank" rel="noopener">${esc(c.text.trim())}</a></div>`;
+  } else body = `<pre class="${looksCode(c.text) ? 'mono' : ''}${blurCls(c)}">${linkify(c.text)}</pre>`;
+  const info = [['From', `${c.from}${inc ? '' : ' (you)'}`], ['Sent', fullDate(c.at)],
+    ['Type', c.kind === 'file' ? kindLabel(c.name) : isUrl(c.text) ? 'Link' : looksCode(c.text) ? 'Code' : 'Text'],
+    ['Size', c.kind === 'file' ? size(c.size) : `${c.text.length.toLocaleString()} characters · ${c.text.trim().split(/\s+/).filter(Boolean).length.toLocaleString()} words`]];
+  if (c.kind === 'file') info.push(['Saved in', c.path.split('/').slice(0, -1).join('/') || me.folder]);
+  if (c.sensitive) info.push(['Private', `Deletes itself in ${leftMin(c)} min`]);
+  if (d) info.push([peer().label, `<span class="${d.cls}">${esc(d.text)}</span>`]);
+  box.innerHTML = `<div class="d-top"><button class="icon back" data-act="back" title="Back">${I.left}</button>
+      <span class="who${inc ? ' in' : ''}">${devIcon(c.from)}${inc ? 'From ' + esc(c.from) : 'You sent'}</span>${inc ? `<span class="to" style="display:flex;color:var(--faint)">${I.arrow}</span><span class="to">${esc(me.device)}</span>` : ''}
+      <span>·</span><span class="num" data-at="${c.at}">${ago(c.at)}</span><div class="grow"></div>
+      <button class="icon${c.pinned ? ' on' : ''}" data-act="pin" title="${c.pinned ? 'Unpin' : 'Pin'}  P">${I.pin}</button></div>
+    <div class="d-body">${body}</div>
+    <dl class="d-info">${info.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${k === (peer()?.label) ? v : esc(v)}</dd>`).join('')}</dl>
+    <div class="d-acts">
+      ${canCopy(c) ? `<button class="btn primary lg" data-act="copy">${I.copy}Copy <kbd>↵</kbd></button>` : ''}
+      ${c.kind === 'file' && c.exists ? `<a class="btn lg" href="${fileUrl(c.path, 1)}">${I.download}Download</a>${kindOf(c.name) !== 'image' ? `<button class="btn lg" data-act="preview">${I.open}Preview</button>` : ''}` : ''}
+      ${c.kind !== 'file' && isUrl(c.text) ? `<a class="btn lg" href="${esc(c.text.trim())}" target="_blank" rel="noopener">${I.open}Open link</a>` : ''}
+      <div class="grow"></div>
+      <button class="btn ghost danger" data-act="del">${I.trash}<span>${c.kind === 'file' ? 'Delete clip and file' : 'Delete'}</span></button>
+    </div>`;
+}
+function selectClip(id, open) { selClip = id; $$('#clipList .ci').forEach(x => x.classList.toggle('sel', x.dataset.id === id)); renderDetail(); if (open) $('#md').classList.add('open'); $(`#clipList .ci[data-id="${id}"]`)?.scrollIntoView({block: 'nearest'}); }
+$('#clipList').addEventListener('click', e => { if (clipQuick(e)) return; const it = e.target.closest('.ci'); if (it) selectClip(it.dataset.id, true); });
+$('#clipDetail').addEventListener('click', async e => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const c = clipState.clips.find(x => x.id === selClip); if (!c && el.dataset.act !== 'back') return;
+  switch (el.dataset.act) {
+    case 'back': $('#md').classList.remove('open'); break;
+    case 'copy': try { await copyClip(c); flashButton(el); toast(c.kind === 'file' ? 'Image copied' : 'Copied'); } catch (err) { toast(err.message, I.alert, true); } break;
+    case 'pin': applyClips(await post('/api/clips/' + c.id, {pinned: !c.pinned}, 'PATCH')); toast(c.pinned ? 'Unpinned' : 'Pinned', I.pin); break;
+    case 'preview': openPreview([c], 0); break;
+    case 'del': if (!(await confirmDialog(clipConfirm(c)))) return; applyClips(await api('/api/clips/' + c.id, {method: 'DELETE'})); $('#md').classList.remove('open'); toast('Deleted', I.trash); break;
+  }
+  if (e.target.closest('.blur')) { revealed.add(c.id); e.target.closest('.blur').classList.add('reveal'); }
+});
+$('#clipSeg').onclick = e => { const b = e.target.closest('button'); if (!b) return; clipFilter = b.dataset.f; $$('#clipSeg button').forEach(x => x.classList.toggle('on', x === b)); renderClips(); };
+$('#clipMore').onclick = e => { e.stopPropagation(); openMenu(e.currentTarget, [{icon: I.trash, label: 'Clear clipboard history', danger: true, confirm: clearConfirm(), run: clearClips}]); };
+async function clearClips() { applyClips(await api('/api/clips', {method: 'DELETE'})); toast('Clipboard cleared · pinned items kept', I.trash); }
+function applyClips(s) {
+  const fresh = seenClips ? s.clips.filter(c => !seenClips.has(c.id) && isIncoming(c)).length : 0;
+  clipState = s;
+  if (fresh) heroIdx = 0;
+  renderHero(); renderHomeClips(); if (page === 'clipboard') renderClips();
+  if (!seenClips) seenClips = new Set(s.clips.map(c => c.id));
+  if (fresh && (document.hidden || page !== 'clipboard')) { unseen += fresh; updateBadge(); }
+}
+function updateBadge() {
+  document.title = unseen && document.hidden ? `(${unseen}) Shared Hub` : 'Shared Hub';
+  for (const b of [$('#navBadge'), $('#tabBadge')]) { b.hidden = !unseen; b.textContent = unseen; }
+}
+async function loadClips() {
+  try {
+    const s = await api('/api/clips');
+    if (!online) { online = true; renderDevices(); }
+    if (s.version !== clipState.version) applyClips(s);
+  } catch { if (online) { online = false; renderDevices(); } }
+}
+
+/* ---------- files ---------- */
+const isNewFile = f => (f.dir ? f.newest : f.arrived) > prevSeen && !myUploads.has(f.path);
+function renderCrumbs() {
+  const name = esc(me.folder || 'Shared Folder'), root = `<button data-p="">${name}</button>`;
+  if (fileMode === 'recent') return $('#crumbs').innerHTML = root + '<i>/</i><span>Recent</span>';
+  const parts = cwd ? cwd.split('/') : [];
+  $('#crumbs').innerHTML = (parts.length ? root : `<span>${name}</span>`) +
+    parts.map((p, i) => `<i>/</i>` + (i === parts.length - 1 ? `<span>${esc(p)}</span>` : `<button data-p="${esc(parts.slice(0, i + 1).join('/'))}">${esc(p)}</button>`)).join('');
+}
+function fileIcon(f) { return f.dir ? A('folder') : kindOf(f.name) === 'image' ? `<img class="thumb" loading="lazy" src="${fileUrl(f.path)}" alt="" onerror="this.outerHTML=kind3d('x.png')">` : kind3d(f.name); }
+function fileRowHTML(f, withPath) {
+  const parent = f.path.split('/').slice(0, -1).join('/');
+  const sub = withPath ? (parent || me.folder) : f.dir ? `${f.count} item${f.count === 1 ? '' : 's'}` : '';
+  return `<div class="tr${highlight === f.path ? ' hl' : ''}" data-path="${esc(f.path)}" data-name="${esc(f.name)}" data-dir="${f.dir ? 1 : ''}">
+      <div class="tname"><span class="ficon">${fileIcon(f)}${isNewFile(f) ? '<span class="newdot" title="New since your last visit"></span>' : ''}</span><div style="min-width:0"><b>${esc(f.name)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</div></div>
+      <div class="tmod num">${dateTime(fileMode === 'recent' ? f.arrived : f.mtime)}</div>
+      <div class="tsize num">${f.dir ? '—' : size(f.size)}</div>
+      <div class="row-qa">${fileActs(f).filter(a => a.id !== 'rename').map(a => `<button class="icon qa-full${a.danger ? ' danger' : ''}" data-qa="${a.id}" title="${esc(a.label)}">${a.icon}</button>`).join('')}
+        <button class="icon" data-act="menu" data-menu title="More">${I.more}</button></div></div>`;
+}
+async function loadRecent() { try { recentItems = (await api('/api/recent')).items; renderShelf(); } catch {} }
+async function loadFiles(force) {
+  if (page !== 'files') return;
+  let data;
+  try { data = fileMode === 'recent' ? await api('/api/recent') : await api('/api/files?path=' + encodeURIComponent(cwd)); }
+  catch { if (fileMode === 'browse' && cwd) { cwd = ''; return loadFiles(true); } return; }
+  const sig = fileMode + cwd + JSON.stringify(data) + prevSeen;
+  if (!force && sig === lastFiles) return;
+  if (document.querySelector('.tname input')) return;
+  lastFiles = sig; fileItems = data.items; renderCrumbs();
+  const head = `<div class="thead"><span>Name</span><span>${fileMode === 'recent' ? 'Arrived' : 'Modified'}</span><span>Size</span><span></span></div>`;
+  if (!data.items.length) {
+    const [t, p, a] = fileMode === 'recent' ? ['No files yet', 'Files added on any device show up here.', 'clock'] : ['This folder is empty', 'Drop files anywhere, or use Upload.', 'folder'];
+    $('#fileTable').innerHTML = `<div class="empty"><div class="art">${A(a)}</div><h3>${t}</h3><p>${p}</p></div>`; return;
+  }
+  $('#fileTable').innerHTML = head + data.items.map(f => fileRowHTML(f, fileMode !== 'browse')).join('');
+  highlight = null;
+}
+function setMode(m) { fileMode = m; $$('#fileSeg button').forEach(b => b.classList.toggle('on', b.dataset.m === m)); lastFiles = ''; loadFiles(true); }
+function go(p, hl) { cwd = p; highlight = hl || null; if (location.hash !== '#files') location.hash = 'files'; setMode('browse'); }
+$('#crumbs').onclick = e => { const b = e.target.closest('button'); if (b) go(b.dataset.p); };
+$('#fileSeg').onclick = e => { const b = e.target.closest('button'); if (b) setMode(b.dataset.m); };
+function startRename(row) {
+  const nameEl = row.querySelector('.tname > div'), old = row.dataset.name, path = row.dataset.path, saved = nameEl.innerHTML;
+  nameEl.innerHTML = `<input value="${esc(old)}" aria-label="New name">`; nameEl.style.flex = '1';
+  const inp = nameEl.querySelector('input'); inp.focus();
+  const dot = old.lastIndexOf('.'); inp.setSelectionRange(0, row.dataset.dir || dot <= 0 ? old.length : dot);
+  let done = false;
+  const finish = async ok => {
+    if (done) return; done = true;
+    const name = inp.value.trim();
+    if (ok && name && name !== old) {
+      try { await post('/api/rename', {path, name}); myUploads.add(path.split('/').slice(0, -1).concat(name).join('/')); toast('Renamed'); } catch (err) { toast(err.message, I.alert, true); }
+    }
+    nameEl.innerHTML = saved; lastFiles = ''; loadFiles(true); loadRecent();
+  };
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') finish(true); if (e.key === 'Escape') finish(false); });
+  inp.addEventListener('blur', () => finish(true));
+  inp.addEventListener('click', e => e.stopPropagation());
+}
+$('#fileTable').addEventListener('click', e => {
+  const row = e.target.closest('.tr'); if (!row || e.target.closest('input')) return;
+  const q = e.target.closest('[data-qa]');
+  if (q) { e.stopPropagation(); const f = fileItems.find(x => x.path === row.dataset.path); return f && runAct(fileActs(f), q.dataset.qa, q); }
+  const act = e.target.closest('[data-act]'), path = row.dataset.path, name = row.dataset.name, dir = !!row.dataset.dir;
+  if (act?.dataset.act === 'menu') {
+    e.stopPropagation();
+    return openMenu(act, [
+      !dir && {icon: I.open, label: 'Preview', run: () => openRow(path)},
+      dir && {icon: I.folder, label: 'Open', run: () => go(path)},
+      !dir && {icon: I.download, label: 'Download', href: fileUrl(path, 1), dl: true},
+      me.local && {icon: I.reveal, label: `Show in ${fm()}`, run: () => post('/api/reveal', {path})},
+      fileMode === 'browse' && {icon: I.edit, label: 'Rename', run: () => startRename(row)},
+      '-',
+      {icon: I.trash, label: 'Delete', danger: true, confirm: fileConfirm({name, dir}), run: async () => {
+        await post('/api/delete', {path}); toast(`Moved ${name} to ${trashName()}`, I.trash); lastFiles = ''; loadFiles(true); loadRecent(); }},
+    ].filter(Boolean));
+  }
+  if (dir) return go(path);
+  openRow(path);
+});
+function openRow(path) { const list = fileItems.filter(f => !f.dir); openPreview(list, list.findIndex(f => f.path === path)); }
+$('#mkdirBtn').onclick = async () => {
+  if (fileMode !== 'browse') setMode('browse');
+  const r = await post('/api/mkdir', {path: cwd, name: 'New folder'}); lastFiles = ''; await loadFiles(true);
+  const row = $$('#fileTable .tr').find(x => x.dataset.name === r.name); if (row) startRename(row);
+};
+function upload(files, {inbox} = {}) {
+  files = [...files]; if (!files.length) return Promise.resolve([]);
+  const bar = $('#progress'), total = files.reduce((a, f) => a + f.size, 0) || 1; let doneBytes = 0;
+  const stamp = new Date().toLocaleString('sv').replace(/:/g, '.');
+  const one = f => new Promise((res, rej) => {
+    const name = /^image\.\w+$/.test(f.name) ? `Pasted image ${stamp}.${f.name.split('.').pop()}` : f.name;
+    const x = new XMLHttpRequest();
+    x.open('PUT', `/api/upload?path=${encodeURIComponent(cwd)}&name=${encodeURIComponent(name)}${inbox ? '&inbox=1' : ''}`);
+    x.setRequestHeader('X-Hub', '1');
+    x.upload.onprogress = e => bar.style.width = ((doneBytes + e.loaded) / total * 100) + '%';
+    x.onload = () => { doneBytes += f.size; x.status < 300 ? res(JSON.parse(x.responseText)) : rej(); };
+    x.onerror = rej; x.send(f);
+  });
+  return (async () => {
+    const done = [];
+    for (const f of files) { try { const r = await one(f); myUploads.add(r.path); done.push(r); } catch { toast('Upload failed: ' + f.name, I.alert, true); } }
+    bar.style.width = '100%'; setTimeout(() => bar.style.width = '0', 400);
+    if (!inbox && done.length) toast(done.length === 1 ? `Added ${done[0].name}` : `Added ${done.length} files`);
+    lastFiles = ''; loadFiles(true); loadRecent(); return done;
+  })();
+}
+$('#uploadBtn').onclick = () => $('#fileInput').click();
+$('#fileInput').onchange = e => { if (fileMode !== 'browse') setMode('browse'); upload(e.target.files); e.target.value = ''; };
+
+/* ---------- notes ---------- */
+const noteTitle = n => n.title.trim() || n.body.trim().split('\n')[0].slice(0, 80) || 'Untitled';
+function renderNotes() {
+  const list = noteState.notes;
+  if (!list.find(n => n.id === openNoteId) && !noteTimer) openNoteId = matchMedia('(max-width:760px)').matches ? null : list[0]?.id || null;
+  $('#noteItems').innerHTML = list.length ? list.map(n => {
+    const body = (n.title.trim() ? n.body : n.body.split('\n').slice(1).join('\n')).trim();
+    return `<div class="ni${n.id === openNoteId ? ' on' : ''}" data-id="${n.id}" role="button" tabindex="0"><b>${esc(noteTitle(n))}</b>${body ? `<p>${esc(body.slice(0, 200))}</p>` : '<p style="color:var(--faint)">No additional text</p>'}
+      <small>${esc(n.by)} · ${dateTime(n.updated)}</small>${actBar(noteActs(n))}</div>`; }).join('')
+    : `<div class="empty"><div class="art">${A('note')}</div><h3>No notes yet</h3><p>Start one here and pick it up on your other computer.</p></div>`;
+  renderEditor();
+}
+function renderEditor(force) {
+  const box = $('#neditor'), n = noteState.notes.find(x => x.id === openNoteId);
+  $('#notesCard').classList.toggle('open', !!n && matchMedia('(max-width:760px)').matches);
+  if (!n) {
+    box.innerHTML = `<div class="empty" style="margin:auto"><div class="art">${A('note')}</div><h3>${noteState.notes.length ? 'Select a note' : 'Notes that follow you'}</h3>
+      <p>Everything saves as you type and appears on your other devices.</p><button class="btn primary" style="margin-top:16px" onclick="newNote()">${I.plus}New note</button></div>`;
+    noteBase = null; return;
+  }
+  const editing = [$('#neTitle'), $('#neBody')].includes(document.activeElement);
+  if (!force && noteBase && noteBase.id === n.id && (editing || noteTimer || noteSaving || n.updated <= noteBase.updated)) { updateNoteMeta(n); return; }
+  noteBase = n;
+  box.innerHTML = `<div class="ne-top"><button class="icon back" id="neBack" title="All notes">${I.left}</button><span class="ne-meta" id="neMeta"></span><div class="grow"></div>
+      <button class="icon" id="neCopy" title="Copy note">${I.copy}</button><button class="icon" id="neMore" data-menu title="More">${I.more}</button></div>
+    <input class="ne-title" id="neTitle" placeholder="Untitled" value="${esc(n.title)}">
+    <textarea class="ne-body" id="neBody" placeholder="Start writing…">${esc(n.body)}</textarea>`;
+  updateNoteMeta(n);
+  $('#neTitle').oninput = queueSave; $('#neBody').oninput = queueSave;
+  $('#neTitle').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); $('#neBody').focus(); } };
+  $('#neBack').onclick = async () => { await flushNote(); await dropIfEmpty(); openNoteId = null; renderNotes(); };
+  $('#neCopy').onclick = async () => { const t = [$('#neTitle').value, $('#neBody').value].filter(s => s.trim()).join('\n\n'); if (await copyText(t)) toast('Note copied'); };
+  $('#neMore').onclick = e => { e.stopPropagation(); openMenu(e.currentTarget, [{icon: I.trash, label: 'Delete note', danger: true, confirm: noteConfirm(n), run: async () => {
+    clearTimeout(noteTimer); noteTimer = null; noteState = await api('/api/notes/' + n.id, {method: 'DELETE'}); openNoteId = null; noteBase = null; renderNotes(); toast('Note deleted', I.trash); }}]); };
+}
+function updateNoteMeta(n) { const m = $('#neMeta'); if (m && !noteTimer && !noteSaving) m.textContent = n.title || n.body ? `Edited on ${n.by} · ${ago(n.updated)}` : 'New note'; }
+async function dropIfEmpty() { const n = noteState.notes.find(x => x.id === openNoteId); if (n && !n.title.trim() && !n.body.trim()) noteState = await api('/api/notes/' + n.id, {method: 'DELETE'}); }
+async function saveNote() {
+  noteTimer = null; const id = openNoteId; if (!id) return;
+  noteSaving = true; if ($('#neMeta')) $('#neMeta').textContent = 'Saving…';
+  try {
+    const s = await post('/api/notes', {id, title: $('#neTitle').value, body: $('#neBody').value});
+    noteState = s; noteBase = s.note; if ($('#neMeta')) $('#neMeta').textContent = 'Saved';
+    const it = $(`.ni[data-id="${id}"]`);
+    if (it) { it.querySelector('b').textContent = noteTitle(s.note); }
+  } finally { noteSaving = false; }
+}
+async function flushNote() { if (noteTimer) { clearTimeout(noteTimer); await saveNote(); } }
+function queueSave() { $('#neMeta').textContent = 'Editing…'; clearTimeout(noteTimer); noteTimer = setTimeout(saveNote, 600); }
+async function newNote() {
+  await flushNote(); await dropIfEmpty();
+  const s = await post('/api/notes', {title: '', body: ''}); noteState = s; openNoteId = s.note.id; noteBase = null;
+  if (location.hash !== '#notes') location.hash = 'notes'; else renderNotes();
+  setTimeout(() => { renderNotes(); $('#neTitle')?.focus(); }, 60);
+}
+$('#newNote').onclick = newNote;
+$('#noteItems').onclick = async e => {
+  const q = e.target.closest('[data-qa]');
+  if (q) { e.stopPropagation(); const n = noteState.notes.find(x => x.id === q.closest('.ni').dataset.id); return n && runAct(noteActs(n), q.dataset.qa, q); }
+  const b = e.target.closest('.ni'); if (!b || b.dataset.id === openNoteId) { if (b) { $('#notesCard').classList.add('open'); } return; }
+  await flushNote(); await dropIfEmpty(); openNoteId = b.dataset.id; store.set('hub.note', openNoteId); noteBase = null; renderNotes();
+};
+async function loadNotes() { try { const s = await api('/api/notes'); if (s.version === noteState.version) return; noteState = s; if (page === 'notes') renderNotes(); } catch {} }
+
+/* ---------- search palette (⌘K) ---------- */
+let pal = null;
+function openPalette() {
+  if (pal) return;
+  pal = {sel: 0, items: [], files: [], q: '', t: null};
+  const w = document.createElement('div'); w.className = 'palette-wrap';
+  w.innerHTML = `<div class="palette" role="dialog" aria-label="Search"><div class="pal-in">${I.search}<input id="palIn" placeholder="Search clips, files and notes, or run a command…" autocomplete="off"><kbd>esc</kbd></div>
+    <div class="pal-res" id="palRes"></div><div class="pal-foot"><span><kbd>↑</kbd> <kbd>↓</kbd> to move</span><span><kbd>↵</kbd> to open or copy</span></div></div>`;
+  document.body.append(w); pal.el = w;
+  w.onclick = e => { if (e.target === w) closePalette(); };
+  const inp = $('#palIn'); inp.focus();
+  inp.oninput = () => { pal.q = inp.value.trim(); pal.sel = 0; renderPalette(); clearTimeout(pal.t); pal.t = setTimeout(searchFiles, 140); };
+  inp.onkeydown = e => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); pal.sel = Math.min(pal.sel + 1, pal.items.length - 1); markPal(); }
+    if (e.key === 'ArrowUp') { e.preventDefault(); pal.sel = Math.max(pal.sel - 1, 0); markPal(); }
+    if (e.key === 'Enter') { e.preventDefault(); runPal(pal.sel); }
+    if (e.key === 'Escape') closePalette();
+  };
+  $('#palRes').onclick = e => { const b = e.target.closest('.pal-i'); if (b) runPal(+b.dataset.n); };
+  $('#palRes').onmousemove = e => { const b = e.target.closest('.pal-i'); if (b && +b.dataset.n !== pal.sel) { pal.sel = +b.dataset.n; markPal(); } };
+  renderPalette(); searchFiles();
+}
+function closePalette() { pal?.el.remove(); pal = null; }
+async function searchFiles() {
+  if (!pal) return; const q = pal.q;
+  pal.files = q ? (await api('/api/search?q=' + encodeURIComponent(q)).catch(() => ({items: []}))).items.slice(0, 6) : recentItems.slice(0, 4);
+  if (pal && pal.q === q) renderPalette();
+}
+function renderPalette() {
+  const q = pal.q.toLowerCase(), has = s => !q || s.toLowerCase().includes(q), groups = [];
+  const actions = [
+    {icon: I.clip, title: 'Send clipboard', sub: `Send what you copied to ${peerName()}`, run: sendFromSystemClipboard},
+    {icon: I.attach, title: 'Send files', sub: 'Pick files to send through the clipboard', run: () => $('#attachInput').click()},
+    {icon: I.plus, title: 'New note', sub: 'Start a note that syncs everywhere', run: () => newNote()},
+    {icon: I.upload, title: 'Upload to folder', sub: 'Add files to the shared folder', run: () => { location.hash = 'files'; setTimeout(() => $('#fileInput').click(), 60); }},
+    {icon: I.sun, title: 'Switch theme', sub: 'Light, dark or match system', run: () => { location.hash = 'settings'; }},
+    {icon: I.settings, title: 'Settings', sub: 'Devices, phone access and appearance', run: () => { location.hash = 'settings'; }},
+  ].filter(a => has(a.title + ' ' + a.sub));
+  const clips = clipState.clips.filter(c => !c.sensitive && has(c.kind === 'file' ? c.name : c.text)).slice(0, q ? 6 : 4).map(c => ({
+    icon: c.kind === 'file' ? (c.exists && kindOf(c.name) === 'image' ? `<img class="thumb" src="${fileUrl(c.path)}" alt="">` : kind3d(c.name)) : isUrl(c.text) ? A('link') : A('clipboard'),
+    title: clipTitle(c), sub: `${isIncoming(c) ? 'From ' + c.from : 'You sent'} · ${ago(c.at)}`, hint: canCopy(c) ? 'Copy' : 'Open',
+    run: async () => { if (canCopy(c)) { await copyClip(c); toast('Copied'); } else { selClip = c.id; location.hash = 'clipboard'; } }}));
+  const files = pal.files.map(f => ({icon: fileIcon(f), title: f.name, sub: f.path.split('/').slice(0, -1).join('/') || me.folder, hint: f.dir ? 'Open' : 'Preview',
+    run: () => f.dir ? go(f.path) : openPreview([f], 0)}));
+  const notes = noteState.notes.filter(n => has(n.title + ' ' + n.body)).slice(0, q ? 5 : 3).map(n => ({icon: A('note'), title: noteTitle(n), sub: `Note · ${ago(n.updated)}`, hint: 'Open',
+    run: () => { openNoteId = n.id; noteBase = null; location.hash = 'notes'; renderNotes(); }}));
+  if (q) { if (clips.length) groups.push(['Clipboard', clips]); if (files.length) groups.push(['Files', files]); if (notes.length) groups.push(['Notes', notes]); if (actions.length) groups.push(['Actions', actions]); }
+  else { groups.push(['Actions', actions.slice(0, 4)]); if (clips.length) groups.push(['Recent clips', clips]); if (files.length) groups.push(['Recent files', files]); }
+  pal.items = groups.flatMap(g => g[1]);
+  let n = 0;
+  $('#palRes').innerHTML = pal.items.length ? groups.map(([g, list]) => `<div class="pal-g">${g}</div>` + list.map(it => `<button class="pal-i" data-n="${n++}">
+      <span class="pi">${it.icon}</span><span class="pm"><b>${esc(it.title)}</b><small>${esc(it.sub)}</small></span>${it.hint ? `<span class="hint">${it.hint} ↵</span>` : ''}</button>`).join('')).join('')
+    : `<div class="empty" style="padding:32px"><p>No results for “${esc(pal.q)}”.</p></div>`;
+  markPal();
+}
+function markPal() { $$('.pal-i').forEach(b => b.classList.toggle('on', +b.dataset.n === pal.sel)); $(`.pal-i[data-n="${pal.sel}"]`)?.scrollIntoView({block: 'nearest'}); }
+function runPal(i) { const it = pal?.items[i]; if (!it) return; closePalette(); it.run(); }
+$('#searchBtn').onclick = openPalette;
+
+/* ---------- drop anywhere ---------- */
+let dz = null, dzT;
+function showDropzone() {
+  if (dz) return;
+  dz = document.createElement('div'); dz.className = 'dropzone';
+  dz.innerHTML = `<div class="dz">
+    <div data-t="send"><div class="art">${A('send')}</div><b>Send to ${esc(peerName())}</b><small>Appears in the clipboard · saved to Inbox</small></div>
+    <div data-t="save"><div class="art">${A('folder')}</div><b>Save to ${esc(page === 'files' && cwd ? cwd.split('/').pop() : me.folder)}</b><small>Adds the files to ${page === 'files' && cwd ? 'this' : 'the shared'} folder</small></div></div>`;
+  document.body.append(dz);
+}
+function hideDropzone() { dz?.remove(); dz = null; }
+addEventListener('dragover', e => {
+  if (!e.dataTransfer.types.includes('Files')) return;
+  e.preventDefault(); showDropzone();
+  const t = e.target.closest?.('[data-t]'); dz.querySelectorAll('[data-t]').forEach(x => x.classList.toggle('on', x === t));
+  clearTimeout(dzT); dzT = setTimeout(hideDropzone, 180);
+});
+addEventListener('drop', e => {
+  e.preventDefault(); const t = e.target.closest?.('[data-t]')?.dataset.t; hideDropzone();
+  if (!e.dataTransfer.files.length || !t) return;
+  if (t === 'send') sendFiles(e.dataTransfer.files);
+  else { if (page !== 'files') cwd = ''; if (fileMode !== 'browse') setMode('browse'); upload(e.dataTransfer.files); }
+});
+document.addEventListener('paste', e => {
+  const files = [...(e.clipboardData?.files || [])];
+  if (files.length && !e.target.closest('.ne-body, .ne-title')) { e.preventDefault(); return sendFiles(files); }
+  if (inField(e.target)) return;
+  const t = e.clipboardData?.getData('text');
+  if (t) { e.preventDefault(); sendClip(t); }
+});
+
+/* ---------- preview ---------- */
+let pv = null;
+async function openPreview(list, i) {
+  if (i < 0 || !list[i]) return;
+  pv = {list, i}; const f = list[i], url = fileUrl(f.path), kind = kindOf(f.name);
+  const textOk = (kind === 'text' || kind === 'code') && (f.size ?? 0) < 2e6;
+  const body = kind === 'image' ? `<img src="${url}" alt="">`
+    : kind === 'video' ? `<video src="${url}" controls autoplay playsinline></video>`
+    : kind === 'audio' ? `<audio src="${url}" controls autoplay></audio>`
+    : kind === 'pdf' ? `<iframe src="${url}"></iframe>`
+    : textOk ? '<pre>Loading…</pre>'
+    : `<div class="empty"><div class="art">${kind3d(f.name)}</div><h3>No preview for this file</h3><p>Download it to open in its app.</p><a class="btn primary" style="margin-top:14px" href="${fileUrl(f.path, 1)}">${I.download}Download</a></div>`;
+  const parent = f.path.split('/').slice(0, -1).join('/');
+  let m = $('#modal');
+  if (!m) { m = Object.assign(document.createElement('div'), {id: 'modal', className: 'modal'}); document.body.append(m); m.onclick = e => { if (e.target === m) closePreview(); }; }
+  m.innerHTML = `<div class="sheet" role="dialog" aria-label="${esc(f.name)}">
+    <div class="sheet-top"><div class="tname"><span class="ficon">${kind3d(f.name)}</span><div style="min-width:0"><b>${esc(f.name)}</b><small>${[f.size != null ? size(f.size) : '', parent || me.folder].filter(Boolean).map(esc).join(' · ')}${list.length > 1 ? ` · ${i + 1} of ${list.length}` : ''}</small></div></div>
+      <button class="icon" data-pv="folder" title="Show in Files">${I.folder}</button>
+      ${me.local ? `<button class="icon" data-pv="reveal" title="Show in ${fm()}">${I.reveal}</button>` : ''}
+      <a class="icon" href="${url}" target="_blank" title="Open in new tab">${I.open}</a>
+      <a class="btn" href="${fileUrl(f.path, 1)}" style="margin:0 6px">${I.download}Download</a>
+      <button class="icon" data-pv="close" title="Close  Esc">${I.x}</button></div>
+    <div class="sheet-body">${body}
+      ${list.length > 1 ? `<button class="nav-arrow l" data-pv="prev" title="Previous">${I.left}</button><button class="nav-arrow r" data-pv="next" title="Next">${I.right}</button>` : ''}</div></div>`;
+  m.querySelectorAll('[data-pv]').forEach(b => b.onclick = () => ({
+    close: closePreview, prev: () => step(-1), next: () => step(1),
+    reveal: () => post('/api/reveal', {path: f.path}),
+    folder: () => { closePreview(); go(parent, f.path); },
+  })[b.dataset.pv]());
+  if (textOk) {
+    const text = await fetch(url).then(r => r.text()).catch(() => 'Could not load file.');
+    const pre = m.querySelector('pre'); if (pre && pv?.list[pv.i] === f) pre.textContent = text;
+  }
+}
+const step = d => { if (pv && pv.list.length > 1) openPreview(pv.list, (pv.i + d + pv.list.length) % pv.list.length); };
+function closePreview() { $('#modal')?.remove(); pv = null; }
+
+/* ---------- help & keyboard ---------- */
+$('#helpBtn').onclick = e => {
+  e.stopPropagation(); if ($('.help')) return closeMenus(); closeMenus();
+  const k = apple() ? '⌘' : 'Ctrl', h = document.createElement('div'); h.className = 'help';
+  h.innerHTML = `<h3>Shortcuts</h3>
+    <div>Search everything <span><kbd>${k}</kbd> <kbd>K</kbd></span></div>
+    <div>Send what you copied <span><kbd>${k}</kbd> <kbd>V</kbd></span></div>
+    <div>Copy the selected clip <kbd>↵</kbd></div>
+    <div>Move through clips <span><kbd>↑</kbd> <kbd>↓</kbd></span></div>
+    <div>Pin the selected clip <kbd>P</kbd></div>
+    <div>Close <kbd>Esc</kbd></div>
+    <div style="color:var(--muted);display:block;line-height:1.55">Drop files anywhere to send them or save them to a folder. Private clips stay hidden until hovered and delete themselves after 10 minutes.</div>`;
+  document.body.append(h);
+};
+document.addEventListener('keydown', e => {
+  if (dlgOpen) return;
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); pal ? closePalette() : openPalette(); return; }
+  if (pal) return;
+  if (pv) { if (e.key === 'Escape') closePreview(); if (e.key === 'ArrowLeft') step(-1); if (e.key === 'ArrowRight') step(1); return; }
+  if (e.key === 'Escape') { closeMenus(); $('#md').classList.remove('open'); }
+  if (inField(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key === '/') { e.preventDefault(); openPalette(); return; }
+  if (page === 'home' && e.key === 'Enter') { e.preventDefault(); copyHero(); }
+  if (page === 'clipboard') {
+    const list = filteredClips(), i = list.findIndex(c => c.id === selClip);
+    if (e.key === 'ArrowDown' || e.key === 'j') { e.preventDefault(); if (list[i + 1]) selectClip(list[i + 1].id); }
+    if (e.key === 'ArrowUp' || e.key === 'k') { e.preventDefault(); if (list[i - 1]) selectClip(list[i - 1].id); }
+    if (e.key === 'Enter') { e.preventDefault(); $('#clipDetail [data-act=copy]')?.click(); }
+    if (e.key.toLowerCase() === 'p') { e.preventDefault(); $('#clipDetail [data-act=pin]')?.click(); }
+  }
+});
+
+/* ---------- lifecycle ---------- */
+const safeToReload = () => !dlgOpen && !$$('[data-sendbar] textarea').some(t => t.value) && !noteTimer && !noteSaving && !pv && !dz && !pal && !document.querySelector('.tname input')
+  && ![$('#neTitle'), $('#neBody')].includes(document.activeElement);
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) store.set('hub.seen', Date.now());
+  else { if (page === 'clipboard') unseen = 0; updateBadge(); prevSeen = +store.get('hub.seen') || prevSeen; loadClips(); loadNotes(); loadFiles(); loadRecent(); loadSync(); }
+});
+addEventListener('pagehide', () => store.set('hub.seen', Date.now()));
+
+(async () => {
+  me = await api('/api/me');
+  $('#kKey').textContent = apple() ? '⌘K' : 'Ctrl K';
+  if (!canReadClipboard()) $('#qaClipboard').hidden = true;
+  setGreeting(); renderDevices();
+  route();
+  loadClips(); loadNotes(); loadRecent(); loadSync();
+  setInterval(loadClips, 1500);
+  setInterval(loadNotes, 3000);
+  setInterval(() => { loadFiles(); loadRecent(); }, 4000);
+  setInterval(loadSync, 5000);
+  setInterval(() => { if (needReload && safeToReload()) location.reload(); }, 1000);
+  setInterval(() => { $$('[data-at]').forEach(t => t.textContent = ago(+t.dataset.at)); setGreeting(); }, 30000);
+})();
+</script>
+</body>
+</html>
