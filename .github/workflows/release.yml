@@ -1,0 +1,62 @@
+# Push a tag like v0.1.0 to build every installer into a draft GitHub release.
+# Nothing is public until the draft is published by hand.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: make dmg VERSION=${GITHUB_REF_NAME#v}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: dist/*.dmg
+
+  windows-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: sudo apt-get update && sudo apt-get install -y nsis
+      - run: make windows-installer linux-packages VERSION=${GITHUB_REF_NAME#v}
+      - name: AppImages
+        run: |
+          packaging/linux/build-appimage.sh ${GITHUB_REF_NAME#v} x86_64 dist/samedesk-linux-x64
+          packaging/linux/build-appimage.sh ${GITHUB_REF_NAME#v} aarch64 dist/samedesk-linux-arm64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-linux
+          path: |
+            dist/*-setup.exe
+            dist/*.deb
+            dist/*.rpm
+            dist/*.AppImage
+
+  release:
+    needs: [macos, windows-linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - run: cd dist && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
+      - uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          name: SameDesk ${{ github.ref_name }}
+          generate_release_notes: true
+          files: dist/*

@@ -36,7 +36,7 @@
 Copy something on your Mac and it is waiting on your PC a second later. Drop a file on one computer and it appears on the other. Write a note at your desk and pick it up on your laptop. SameDesk is one small app for each computer. There are no accounts, no cloud and no servers to trust, because your devices talk directly to each other.
 
 > [!NOTE]
-> SameDesk is in active development. Sync, the dashboard, the clipboard, device pairing and the menu bar icon work today. Installers are next; see the [roadmap](#roadmap).
+> SameDesk is in active development. Sync, the dashboard, the clipboard, device pairing, the menu bar icon and installers work today. Signed builds and automatic updates are next; see the [roadmap](#roadmap).
 
 <br>
 
@@ -118,14 +118,18 @@ Copy something on your Mac and it is waiting on your PC a second later. Drop a f
 
 ## Get started
 
-Installers arrive with the first release. Until then, building takes about a minute.
+Download the installer for each computer from the [latest release](https://github.com/SyedAliMasoodBukhari/Samedesk/releases/latest):
 
-```bash
-git clone https://github.com/SyedAliMasoodBukhari/samedesk.git
-cd samedesk
-make
-./bin/samedesk
-```
+| | Download | Install |
+|---|---|---|
+| **macOS** | `SameDesk-<version>.dmg` (Apple Silicon and Intel) | Open it and drag **SameDesk** to **Applications**. |
+| **Windows** | `SameDesk-<version>-windows-x64-setup.exe` (or `arm64`) | Run it. It installs for you only and needs no admin rights. |
+| **Linux** | `.deb`, `.rpm` or `.AppImage` | `sudo apt install ./samedesk_<version>_amd64.deb`, or make the AppImage executable and run it. |
+
+> [!IMPORTANT]
+> Early releases are not signed yet, so the first launch needs one extra step.
+> **macOS:** if it says the app can't be checked, open **System Settings → Privacy & Security** and choose **Open Anyway**.
+> **Windows:** if SmartScreen appears, choose **More info → Run anyway**.
 
 SameDesk creates a **SameDesk** folder in your home folder, adds its icon to the menu bar (or the tray on Windows and Linux) and opens the dashboard at `http://localhost:8765`. Do the same on your other computer, then pair them.
 
@@ -141,6 +145,7 @@ SameDesk creates a **SameDesk** folder in your home folder, adds its icon to the
 -data     settings and sync database     (default: your OS's app-data folder)
 -open     open the dashboard on start    (default: true)
 -tray     show the menu bar / tray icon  (default: true; off runs in the background only)
+-version  print the version and exit
 ```
 
 </details>
@@ -235,10 +240,15 @@ In the <b>SameDesk</b> folder in your home folder (or wherever you point <code>-
 Requires [Go](https://go.dev) 1.26 or newer.
 
 ```bash
-make            # this computer, into bin/
-make release    # all six platforms, into dist/
-make test       # vet and tests
+make                     # this computer, into bin/
+make release             # all six platforms, into dist/
+make test                # vet and tests
+make dmg                 # macOS .dmg (on a Mac)
+make windows-installer   # Windows installers (needs NSIS: brew install makensis / apt install nsis)
+make linux-packages      # .deb and .rpm
 ```
+
+Pushing a tag such as `v0.1.0` builds every installer on GitHub Actions into a draft release.
 
 - `-tags noassets` leaves out Syncthing's own web interface; SameDesk is the interface.
 - macOS builds use cgo so the sync engine can watch the folder with FSEvents. Windows and Linux build without cgo (pure-Go SQLite), so every platform builds from any computer.
@@ -253,6 +263,9 @@ cmd/samedesk/      entry point and flags
 internal/engine/    embedded Syncthing: identity, config, folder, pairing
 internal/hub/       dashboard server: clipboard, notes, files, sync status, per-OS bits
 internal/pairing/   finding nearby devices while "Add a device" is open
+internal/tray/      menu bar and tray icon
+internal/autostart/ start at login on each OS
+packaging/          icons, .dmg, Windows installer and Linux packages
 web/                the dashboard, compiled into the binary
 docs/images/        screenshots for this page
 ```
@@ -267,7 +280,8 @@ docs/images/        screenshots for this page
 - [x] Clipboard, files, notes, search and phone access
 - [x] Pairing with nearby discovery, device codes and check codes
 - [x] Menu bar and tray icon, start at login
-- [ ] Signed installers: `.dmg`, Windows installer, AppImage and `.deb`
+- [x] Installers: `.dmg`, Windows installer, AppImage, `.deb` and `.rpm`
+- [ ] Signed and notarised builds, so first launch needs no extra step
 - [ ] Homebrew, winget and Flathub
 - [ ] Automatic updates, including new Syncthing releases
 
