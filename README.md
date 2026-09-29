@@ -36,7 +36,7 @@
 Copy something on your Mac and it is waiting on your PC a second later. Drop a file on one computer and it appears on the other. Write a note at your desk and pick it up on your laptop. SameDesk is one small app for each computer. There are no accounts, no cloud and no servers to trust, because your devices talk directly to each other.
 
 > [!NOTE]
-> SameDesk is in active development. Sync, the dashboard, the clipboard and device pairing work today. Installers and a menu bar icon are next; see the [roadmap](#roadmap).
+> SameDesk is in active development. Sync, the dashboard, the clipboard, device pairing and the menu bar icon work today. Installers are next; see the [roadmap](#roadmap).
 
 <br>
 
@@ -108,6 +108,7 @@ Copy something on your Mac and it is waiting on your PC a second later. Drop a f
 | **Know it arrived** | Your latest clip says *On Office PC* once it's there, or *Waiting for Office PC* while that computer is offline. |
 | **Shared folder** | A normal folder on every computer, kept identical. Use it from Finder, Explorer or your file manager as well as the dashboard. |
 | **Notes** | Synced notes with autosave. The newest edit wins, without conflict copies. |
+| **Always at hand** | A quiet icon in the menu bar or tray shows whether you're up to date and opens SameDesk or the shared folder. It can start at login. |
 | **Search everything** | <kbd>⌘</kbd> <kbd>K</kbd> finds clips, files and notes, and runs actions like *Send clipboard* or *New note*. |
 | **Your phone too** | Scan a QR code to open the dashboard on a phone on the same Wi-Fi. |
 | **Light and dark** | Follows your system, or pick one in Settings. |
@@ -126,7 +127,7 @@ make
 ./bin/samedesk
 ```
 
-SameDesk creates a **SameDesk** folder in your home folder and opens the dashboard at `http://localhost:8765`. Do the same on your other computer, then pair them.
+SameDesk creates a **SameDesk** folder in your home folder, adds its icon to the menu bar (or the tray on Windows and Linux) and opens the dashboard at `http://localhost:8765`. Do the same on your other computer, then pair them.
 
 <details>
 <summary><b>Options</b></summary>
@@ -134,11 +135,12 @@ SameDesk creates a **SameDesk** folder in your home folder and opens the dashboa
 <br>
 
 ```text
--folder   the shared folder             (default: ~/SameDesk)
--name     how this computer appears     (default: its system name)
--port     dashboard port                (default: 8765)
--data     settings and sync database    (default: your OS's app-data folder)
--open     open the dashboard on start   (default: true)
+-folder   the shared folder              (default: ~/SameDesk)
+-name     how this computer appears      (default: its system name)
+-port     dashboard port                 (default: 8765)
+-data     settings and sync database     (default: your OS's app-data folder)
+-open     open the dashboard on start    (default: true)
+-tray     show the menu bar / tray icon  (default: true; off runs in the background only)
 ```
 
 </details>
@@ -264,7 +266,7 @@ docs/images/        screenshots for this page
 - [x] One app with an embedded sync engine
 - [x] Clipboard, files, notes, search and phone access
 - [x] Pairing with nearby discovery, device codes and check codes
-- [ ] Menu bar and tray icon, start at login
+- [x] Menu bar and tray icon, start at login
 - [ ] Signed installers: `.dmg`, Windows installer, AppImage and `.deb`
 - [ ] Homebrew, winget and Flathub
 - [ ] Automatic updates, including new Syncthing releases

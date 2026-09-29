@@ -123,6 +123,7 @@ func (p *Pin) UnmarshalJSON(b []byte) error {
 
 type clipDoc struct {
 	Device  string         `json:"device,omitempty"`   // "Mac", "Windows" or "Linux"
+	Name    string         `json:"name,omitempty"`     // the device's own name, e.g. "Ali's MacBook Air"
 	ID      string         `json:"deviceId,omitempty"` // full Syncthing device ID
 	Clips   []Clip         `json:"clips"`
 	Deleted []string       `json:"deleted"`
@@ -168,6 +169,7 @@ type Note struct {
 
 type noteDoc struct {
 	Device  string           `json:"device,omitempty"`
+	Name    string           `json:"name,omitempty"`
 	ID      string           `json:"deviceId,omitempty"`
 	Notes   map[string]Note  `json:"notes"`
 	Deleted map[string]int64 `json:"deleted"`

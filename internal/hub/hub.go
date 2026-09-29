@@ -93,9 +93,19 @@ func New(c Config) (*Hub, error) {
 	if h.notes, err = openStore(filepath.Join(h.hubDir, "notes"), h.id, func() noteDoc { return noteDoc{} }, fillNoteDoc); err != nil {
 		return nil, err
 	}
-	full := c.Engine.ID.String()
-	h.clips.mine.Device, h.clips.mine.ID = h.device, full
-	h.notes.mine.Device, h.notes.mine.ID = h.device, full
+	// Each device writes who it is into its own files, so the others always show
+	// its current name, even after the computer is renamed.
+	full, name := c.Engine.ID.String(), c.Engine.Name()
+	if m := &h.clips.mine; m.Device != h.device || m.ID != full || m.Name != name {
+		m.Device, m.ID, m.Name = h.device, full, name
+		_ = h.clips.save()
+		h.rescan(".samedesk/clips")
+	}
+	if m := &h.notes.mine; m.Device != h.device || m.ID != full || m.Name != name {
+		m.Device, m.ID, m.Name = h.device, full, name
+		_ = h.notes.save()
+		h.rescan(".samedesk/notes")
+	}
 	h.beacon = pairing.Start(c.Engine.ID.String(), c.Engine.Name(), h.device)
 	go h.expiryLoop()
 	return h, nil
@@ -387,6 +397,16 @@ func (h *Hub) saveClips() error {
 	return nil
 }
 
+// addClip puts a new clip of this device's on top. The caller holds h.mu.
+func (h *Hub) addClip(c Clip) error {
+	m := &h.clips.mine
+	m.Clips = append([]Clip{c}, m.Clips...)
+	if len(m.Clips) > maxClips {
+		m.Clips = m.Clips[:maxClips]
+	}
+	return h.saveClips()
+}
+
 func (h *Hub) deleteClip(id string) {
 	live := h.mergedClips().Clips
 	var clip *ClipOut
@@ -472,12 +492,7 @@ func (h *Hub) clipsAPI(w http.ResponseWriter, r *http.Request) error {
 				c.Sensitive, c.Expires = true, c.At+sensitiveTTL
 			}
 		}
-		m := &h.clips.mine
-		m.Clips = append([]Clip{c}, m.Clips...)
-		if len(m.Clips) > maxClips {
-			m.Clips = m.Clips[:maxClips]
-		}
-		if err := h.saveClips(); err != nil {
+		if err := h.addClip(c); err != nil {
 			return err
 		}
 	case id == "" && r.Method == http.MethodDelete: // clear all, keeping pinned

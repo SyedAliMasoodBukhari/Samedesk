@@ -12,6 +12,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/syncthing/syncthing/lib/config"
@@ -111,6 +112,12 @@ func Start(o Options) (*Engine, error) {
 // prepare makes the config right for an app nobody configures by hand:
 // a private API, no Syncthing pop-ups or prompts, and the shared folder in place.
 func prepare(cfg config.Wrapper, myID protocol.DeviceID, o Options) error {
+	marker := filepath.Join(o.HomeDir, "custom-name")
+	_, err := os.Stat(marker)
+	custom := err == nil
+	if o.ForceName {
+		_ = os.WriteFile(marker, []byte(o.DeviceName+"\n"), 0o600)
+	}
 	w, err := cfg.Modify(func(c *config.Configuration) {
 		if c.GUI.APIKey == "" {
 			c.GUI.APIKey = randomKey()
@@ -133,12 +140,12 @@ func prepare(cfg config.Wrapper, myID protocol.DeviceID, o Options) error {
 		f.FSWatcherDelayS = 1 // clipboard and notes should arrive in seconds, not ten
 		c.SetFolder(f)
 
-		// Replace Syncthing's default (the raw hostname) with the computer's friendly name.
-		if me, _, ok := c.Device(myID); ok && o.DeviceName != "" {
-			if host, _ := os.Hostname(); me.Name == "" || me.Name == host || o.ForceName {
-				me.Name = o.DeviceName
-				c.SetDevice(me)
-			}
+		// Use the computer's friendly name rather than Syncthing's default (the raw
+		// hostname), and follow it when the computer is renamed, unless a name was
+		// chosen with -name.
+		if me, _, ok := c.Device(myID); ok && o.DeviceName != "" && (o.ForceName || !custom) && me.Name != o.DeviceName {
+			me.Name = o.DeviceName
+			c.SetDevice(me)
 		}
 	})
 	if err != nil {

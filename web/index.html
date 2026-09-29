@@ -888,7 +888,7 @@ function renderSettings() {
       <div class="linkline">${esc(me.link)}</div><button class="btn" id="copyLink">${I.copy}Copy link</button></div>
       <div class="phone3d" aria-hidden="true"><div class="p-body"><div class="p-screen"><span class="p-island"></span><div class="p-app">
         <div class="p-top"><span class="mark">${I.logo}</span>SameDesk</div>
-        <div class="p-card"><small>LATEST FROM ${esc(me.host.toUpperCase())}</small><b>Project notes for tomorrow</b><i>Copy</i></div>
+        <div class="p-card"><small>LATEST FROM ${esc((me.name || me.host).toUpperCase())}</small><b>Project notes for tomorrow</b><i>Copy</i></div>
         <div class="p-row">${A('clipboard')}<span><i></i><i></i></span></div>
         <div class="p-row">${A('folder')}<span><i></i><i></i></span></div>
         <div class="p-row">${A('note')}<span><i></i><i></i></span></div>
