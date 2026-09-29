@@ -1,4 +1,4 @@
-module github.com/sharedhub/shared-hub
+module github.com/SyedAliMasoodBukhari/samedesk
 
 go 1.27.1
 

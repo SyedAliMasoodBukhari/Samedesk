@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/images/logo.svg" width="76" height="76" alt="Shared Hub">
+  <img src="docs/images/logo.svg" width="76" height="76" alt="SameDesk">
 </p>
 
-<h1 align="center">Shared Hub</h1>
+<h1 align="center">SameDesk</h1>
 
 <p align="center">
   <b>One clipboard, one folder and one set of notes across every computer you use.</b><br>
@@ -28,19 +28,19 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/hero-dark.png">
-  <img src="docs/images/hero-light.png" alt="The Shared Hub dashboard: the latest clip from another computer, recent items and newly added files">
+  <img src="docs/images/hero-light.png" alt="The SameDesk dashboard: the latest clip from another computer, recent items and newly added files">
 </picture>
 
 <br>
 
-Copy something on your Mac and it is waiting on your PC a second later. Drop a file on one computer and it appears on the other. Write a note at your desk and pick it up on your laptop. Shared Hub is one small app for each computer. There are no accounts, no cloud and no servers to trust, because your devices talk directly to each other.
+Copy something on your Mac and it is waiting on your PC a second later. Drop a file on one computer and it appears on the other. Write a note at your desk and pick it up on your laptop. SameDesk is one small app for each computer. There are no accounts, no cloud and no servers to trust, because your devices talk directly to each other.
 
 > [!NOTE]
-> Shared Hub is in active development. Sync, the dashboard, the clipboard and device pairing work today. Installers and a menu bar icon are next; see the [roadmap](#roadmap).
+> SameDesk is in active development. Sync, the dashboard, the clipboard and device pairing work today. Installers and a menu bar icon are next; see the [roadmap](#roadmap).
 
 <br>
 
-## Why Shared Hub
+## Why SameDesk
 
 <table>
   <tr>
@@ -120,13 +120,13 @@ Copy something on your Mac and it is waiting on your PC a second later. Drop a f
 Installers arrive with the first release. Until then, building takes about a minute.
 
 ```bash
-git clone https://github.com/sharedhub/shared-hub.git
-cd shared-hub
+git clone https://github.com/SyedAliMasoodBukhari/samedesk.git
+cd samedesk
 make
-./bin/sharedhub
+./bin/samedesk
 ```
 
-Shared Hub creates a **Shared Hub** folder in your home folder and opens the dashboard at `http://localhost:8765`. Do the same on your other computer, then pair them.
+SameDesk creates a **SameDesk** folder in your home folder and opens the dashboard at `http://localhost:8765`. Do the same on your other computer, then pair them.
 
 <details>
 <summary><b>Options</b></summary>
@@ -134,7 +134,7 @@ Shared Hub creates a **Shared Hub** folder in your home folder and opens the das
 <br>
 
 ```text
--folder   the shared folder             (default: ~/Shared Hub)
+-folder   the shared folder             (default: ~/SameDesk)
 -name     how this computer appears     (default: its system name)
 -port     dashboard port                (default: 8765)
 -data     settings and sync database    (default: your OS's app-data folder)
@@ -147,7 +147,7 @@ Shared Hub creates a **Shared Hub** folder in your home folder and opens the das
 
 ## Pair your computers
 
-1. Open Shared Hub on both computers and choose **Add a device**.
+1. Open SameDesk on both computers and choose **Add a device**.
 2. On one, click **Pair** next to the other computer.
 3. The other computer asks *"MacBook Pro wants to connect"*. Check that both screens show the same six-digit code, then click **Accept**.
 
@@ -164,21 +164,21 @@ That's it. From now on they sync by themselves, at home, at the office or across
 flowchart LR
   subgraph A["Your Mac"]
     direction TB
-    UIa["Dashboard<br/>localhost:8765"] --- HUBa["Shared Hub"]
+    UIa["Dashboard<br/>localhost:8765"] --- HUBa["SameDesk"]
     HUBa --- STa["Sync engine<br/>(Syncthing)"]
-    HUBa --- Fa[("Shared Hub folder")]
+    HUBa --- Fa[("SameDesk folder")]
   end
   subgraph B["Your PC"]
     direction TB
-    UIb["Dashboard<br/>localhost:8765"] --- HUBb["Shared Hub"]
+    UIb["Dashboard<br/>localhost:8765"] --- HUBb["SameDesk"]
     HUBb --- STb["Sync engine<br/>(Syncthing)"]
-    HUBb --- Fb[("Shared Hub folder")]
+    HUBb --- Fb[("SameDesk folder")]
   end
   STa <== "encrypted, direct or via relay" ==> STb
 ```
 
 - **One program per computer.** The dashboard and the [Syncthing](https://syncthing.net) sync engine run in the same process. Syncthing is embedded as a Go library at a pinned release, with its own identity, settings and ports, so it never interferes with a Syncthing you already run.
-- **The folder is the database.** Clips and notes live in the shared folder under `.hub/`. Each computer writes only its own file (`.hub/clips/<device-id>.json`) and reads the others', so two computers never edit the same file and Syncthing never has to resolve a conflict.
+- **The folder is the database.** Clips and notes live in the shared folder under `.samedesk/`. Each computer writes only its own file (`.samedesk/clips/<device-id>.json`) and reads the others', so two computers never edit the same file and Syncthing never has to resolve a conflict.
 - **Changes go out immediately.** After every change the hub tells the engine exactly what changed, instead of waiting for the next scan.
 
 <br>
@@ -199,7 +199,7 @@ flowchart LR
 <details>
 <summary><b>Do I need to install Syncthing?</b></summary>
 <br>
-No. Shared Hub includes it. If you already use Syncthing, both run side by side without touching each other.
+No. SameDesk includes it. If you already use Syncthing, both run side by side without touching each other.
 </details>
 
 <details>
@@ -223,7 +223,7 @@ Yes, as a web app: scan the QR code in Settings while your phone is on the same 
 <details>
 <summary><b>Where are my files?</b></summary>
 <br>
-In the <b>Shared Hub</b> folder in your home folder (or wherever you point <code>-folder</code>). It's a normal folder, so you can also use it directly.
+In the <b>SameDesk</b> folder in your home folder (or wherever you point <code>-folder</code>). It's a normal folder, so you can also use it directly.
 </details>
 
 <br>
@@ -238,7 +238,7 @@ make release    # all six platforms, into dist/
 make test       # vet and tests
 ```
 
-- `-tags noassets` leaves out Syncthing's own web interface; Shared Hub is the interface.
+- `-tags noassets` leaves out Syncthing's own web interface; SameDesk is the interface.
 - macOS builds use cgo so the sync engine can watch the folder with FSEvents. Windows and Linux build without cgo (pure-Go SQLite), so every platform builds from any computer.
 
 <details>
@@ -247,7 +247,7 @@ make test       # vet and tests
 <br>
 
 ```text
-cmd/sharedhub/      entry point and flags
+cmd/samedesk/      entry point and flags
 internal/engine/    embedded Syncthing: identity, config, folder, pairing
 internal/hub/       dashboard server: clipboard, notes, files, sync status, per-OS bits
 internal/pairing/   finding nearby devices while "Add a device" is open
@@ -279,6 +279,6 @@ Issues and pull requests are welcome. Run `make test` before sending a change, a
 
 ## Licence and credits
 
-Shared Hub is released under the [MIT licence](LICENSE).
+SameDesk is released under the [MIT licence](LICENSE).
 
-It stands on [Syncthing](https://syncthing.net) (Mozilla Public License 2.0), included unmodified, and uses [Microsoft Fluent Emoji](https://github.com/microsoft/fluentui-emoji) (MIT) for its 3D icons. See [NOTICE](NOTICE) for details. "Syncthing" is a trademark of the Syncthing Foundation; Shared Hub is an independent project and is not affiliated with it.
+It stands on [Syncthing](https://syncthing.net) (Mozilla Public License 2.0), included unmodified, and uses [Microsoft Fluent Emoji](https://github.com/microsoft/fluentui-emoji) (MIT) for its 3D icons. See [NOTICE](NOTICE) for details. "Syncthing" is a trademark of the Syncthing Foundation; SameDesk is an independent project and is not affiliated with it.

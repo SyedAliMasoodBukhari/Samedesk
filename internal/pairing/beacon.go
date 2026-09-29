@@ -1,4 +1,4 @@
-// Package pairing finds other Shared Hub devices on the local network.
+// Package pairing finds other SameDesk devices on the local network.
 //
 // While a user has "Add a device" open, the hub announces itself (name, kind,
 // device ID) by UDP broadcast and listens for others doing the same. Nothing is
@@ -17,7 +17,7 @@ import (
 
 const (
 	Port    = 21099
-	appName = "shared-hub"
+	appName = "samedesk"
 	every   = 1500 * time.Millisecond
 	stale   = 6 * time.Second
 )

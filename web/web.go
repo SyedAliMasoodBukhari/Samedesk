@@ -1,4 +1,4 @@
-// Package web holds the dashboard UI, compiled into the Shared Hub binary.
+// Package web holds the dashboard UI, compiled into the SameDesk binary.
 package web
 
 import "embed"

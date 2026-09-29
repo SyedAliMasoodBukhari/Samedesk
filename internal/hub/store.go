@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// Shared data (clipboard, notes) lives in <folder>/.hub/<kind>/<device short ID>.json.
+// Shared data (clipboard, notes) lives in <folder>/.samedesk/<kind>/<device short ID>.json.
 // Each device writes only its own file and merges the others on read, so
 // Syncthing carries everything across without ever seeing conflicting edits.
 

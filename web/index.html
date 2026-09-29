@@ -12,7 +12,7 @@
   })();
 </script>
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Shared Hub</title>
+<title>SameDesk</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -507,7 +507,7 @@ kbd{font:500 11px var(--sans);padding:1px 5px;border:1px solid var(--line-2);bor
 <body>
 <div class="shell">
   <aside class="side">
-    <div class="logo"><span class="mark" data-i="logo"></span>Shared Hub</div>
+    <div class="logo"><span class="mark" data-i="logo"></span>SameDesk</div>
     <a class="nav" href="#home" data-page="home"><span data-i="home"></span>Home</a>
     <a class="nav" href="#clipboard" data-page="clipboard"><span data-i="clip"></span>Clipboard<span class="badge" id="navBadge" hidden></span></a>
     <a class="nav" href="#files" data-page="files"><span data-i="folder"></span>Files</a>
@@ -522,7 +522,7 @@ kbd{font:500 11px var(--sans);padding:1px 5px;border:1px solid var(--line-2);bor
 
   <div class="main">
     <header class="top">
-      <div class="logo mlogo"><span class="mark" data-i="logo"></span>Shared Hub</div>
+      <div class="logo mlogo"><span class="mark" data-i="logo"></span>SameDesk</div>
       <button class="searchbtn" id="searchBtn" title="Search"><span data-i="search"></span><span>Search clips, files and notes</span><kbd id="kKey">⌘K</kbd></button>
       <a class="icon mstatus" href="#settings" title="Devices"><i class="dot" id="mDot"></i></a>
     </header>
@@ -887,13 +887,13 @@ function renderSettings() {
       <div style="flex:1;min-width:0"><h3>Open on your phone</h3><p>Scan with your phone's camera to get the full app. Your phone needs to be on the same Wi-Fi.</p>
       <div class="linkline">${esc(me.link)}</div><button class="btn" id="copyLink">${I.copy}Copy link</button></div>
       <div class="phone3d" aria-hidden="true"><div class="p-body"><div class="p-screen"><span class="p-island"></span><div class="p-app">
-        <div class="p-top"><span class="mark">${I.logo}</span>Shared Hub</div>
+        <div class="p-top"><span class="mark">${I.logo}</span>SameDesk</div>
         <div class="p-card"><small>LATEST FROM ${esc(me.host.toUpperCase())}</small><b>Project notes for tomorrow</b><i>Copy</i></div>
         <div class="p-row">${A('clipboard')}<span><i></i><i></i></span></div>
         <div class="p-row">${A('folder')}<span><i></i><i></i></span></div>
         <div class="p-row">${A('note')}<span><i></i><i></i></span></div>
         <span class="p-bar"></span></div></div></div></div></div>`
-      : `<div class="card-h"><h2>Phone access</h2></div><div class="empty" style="padding-top:8px"><p>Open Shared Hub on the computer itself to get the QR code for your phone.</p></div>`;
+      : `<div class="card-h"><h2>Phone access</h2></div><div class="empty" style="padding-top:8px"><p>Open SameDesk on the computer itself to get the QR code for your phone.</p></div>`;
     if (me.link) { drawQR(); $('#copyLink').onclick = async e => { if (await copyText(me.link)) flashButton(e.currentTarget, 'Copied'); }; }
     const acts = [`<button id="actClear">${I.trash}<span>Clear clipboard history</span></button>`];
     if (me.local) acts.push(`<button id="actReveal">${I.reveal}<span>Show shared folder in ${fm()}</span></button>`);
@@ -1142,7 +1142,7 @@ function renderClips() {
   if (!list.find(c => c.id === selClip)) selClip = list[0]?.id || null;
   $('#clipList').innerHTML = list.length ? list.map(c => clipItemHTML(c, {sel: c.id === selClip})).join('')
     : `<div class="empty"><div class="art">${A(all.length ? 'search' : 'clipboard')}</div><h3>${all.length ? 'Nothing here' : 'Your shared clipboard is empty'}</h3>
-       <p>${all.length ? 'Try another filter.' : `Press <kbd>${apple() ? '⌘' : 'Ctrl'}</kbd> <kbd>V</kbd> anywhere in Shared Hub to send what you copied.`}</p></div>`;
+       <p>${all.length ? 'Try another filter.' : `Press <kbd>${apple() ? '⌘' : 'Ctrl'}</kbd> <kbd>V</kbd> anywhere in SameDesk to send what you copied.`}</p></div>`;
   renderDetail();
   if (page === 'clipboard') seenClips = new Set(all.map(c => c.id));
 }
@@ -1203,7 +1203,7 @@ function applyClips(s) {
   if (fresh && (document.hidden || page !== 'clipboard')) { unseen += fresh; updateBadge(); }
 }
 function updateBadge() {
-  document.title = unseen && document.hidden ? `(${unseen}) Shared Hub` : 'Shared Hub';
+  document.title = unseen && document.hidden ? `(${unseen}) SameDesk` : 'SameDesk';
   for (const b of [$('#navBadge'), $('#tabBadge')]) { b.hidden = !unseen; b.textContent = unseen; }
 }
 async function loadClips() {
@@ -1485,7 +1485,7 @@ async function pollPair() {
 function nearHTML(st) {
   if (!st?.available) return `<div class="near-empty"><span class="ghost"></span><span>Finding devices on this network isn't available on this computer. Use a code below.</span></div>`;
   const list = st.nearby || [];
-  if (!list.length) return `<div class="near-empty"><span class="ghost"></span><span>On your other computer, open Shared Hub and choose <b style="color:var(--ink-2);font-weight:550">Add a device</b>. It appears here.</span></div>`;
+  if (!list.length) return `<div class="near-empty"><span class="ghost"></span><span>On your other computer, open SameDesk and choose <b style="color:var(--ink-2);font-weight:550">Add a device</b>. It appears here.</span></div>`;
   return `<div class="near">${list.map(n => `<div class="near-i"><span class="dev3d">${dev3d(n.os)}</span><div style="flex:1;min-width:0"><b>${esc(n.name)}</b><small>${esc([n.os, n.addr].filter(Boolean).join(' · '))}</small></div>
     ${n.paired ? `<span style="color:var(--ok);font-size:12.5px;display:flex;gap:5px;align-items:center">${I.check}Paired</span>` : `<button class="btn primary" data-pair="${esc(n.id)}">Pair</button>`}</div>`).join('')}</div>`;
 }

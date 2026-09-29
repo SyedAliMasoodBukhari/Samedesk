@@ -1,4 +1,4 @@
-// Shared Hub: a shared clipboard, files and notes across your computers,
+// SameDesk: a shared clipboard, files and notes across your computers,
 // synced by an embedded Syncthing. One program, nothing else to install.
 package main
 
@@ -11,16 +11,16 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"github.com/sharedhub/shared-hub/internal/engine"
-	"github.com/sharedhub/shared-hub/internal/hub"
+	"github.com/SyedAliMasoodBukhari/samedesk/internal/engine"
+	"github.com/SyedAliMasoodBukhari/samedesk/internal/hub"
 )
 
 func main() {
 	home, _ := os.UserHomeDir()
 	confDir, _ := os.UserConfigDir()
 
-	dataDir := flag.String("data", filepath.Join(confDir, "SharedHub"), "where Shared Hub keeps its settings and sync database")
-	folder := flag.String("folder", filepath.Join(home, "Shared Hub"), "the shared folder")
+	dataDir := flag.String("data", filepath.Join(confDir, "SameDesk"), "where SameDesk keeps its settings and sync database")
+	folder := flag.String("folder", filepath.Join(home, "SameDesk"), "the shared folder")
 	port := flag.Int("port", 8765, "dashboard port")
 	openUI := flag.Bool("open", true, "open the dashboard in a browser on start")
 	name := flag.String("name", "", "how this device appears to others (default: the computer's name)")
@@ -29,7 +29,7 @@ func main() {
 	// Bind the dashboard port first: it doubles as the "already running" check.
 	srv, err := hub.Listen(*port)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Shared Hub is already running (port %d is in use). Open http://localhost:%d\n", *port, *port)
+		fmt.Fprintf(os.Stderr, "SameDesk is already running (port %d is in use). Open http://localhost:%d\n", *port, *port)
 		if *openUI {
 			hub.OpenBrowser(fmt.Sprintf("http://localhost:%d", *port))
 		}
@@ -39,8 +39,8 @@ func main() {
 	eng, err := engine.Start(engine.Options{
 		HomeDir:    filepath.Join(*dataDir, "syncthing"),
 		FolderPath: *folder,
-		FolderID:   "shared-hub",
-		FolderName: "Shared Hub",
+		FolderID:   "samedesk",
+		FolderName: "SameDesk",
 		DeviceName: firstNonEmpty(*name, hub.DisplayName()),
 		ForceName:  *name != "",
 	})
@@ -62,7 +62,7 @@ func main() {
 		}
 	}()
 	url := fmt.Sprintf("http://localhost:%d", *port)
-	slog.Info("Shared Hub is ready", "url", url)
+	slog.Info("SameDesk is ready", "url", url)
 	if *openUI {
 		hub.OpenBrowser(url)
 	}

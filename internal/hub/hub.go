@@ -1,4 +1,4 @@
-// Package hub is the Shared Hub dashboard: a small web app for the shared folder
+// Package hub is the SameDesk dashboard: a small web app for the shared folder
 // with a clipboard, files and notes. It serves the embedded UI on localhost, and
 // to phones on the same Wi-Fi that open the key link shown in Settings.
 package hub
@@ -22,9 +22,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sharedhub/shared-hub/internal/engine"
-	"github.com/sharedhub/shared-hub/internal/pairing"
-	"github.com/sharedhub/shared-hub/web"
+	"github.com/SyedAliMasoodBukhari/samedesk/internal/engine"
+	"github.com/SyedAliMasoodBukhari/samedesk/internal/pairing"
+	"github.com/SyedAliMasoodBukhari/samedesk/web"
 )
 
 const (
@@ -57,10 +57,10 @@ type Hub struct {
 	sync  syncCache
 }
 
-// Device is what kind of computer this is. SHAREDHUB_DEVICE_KIND overrides it,
+// Device is what kind of computer this is. SAMEDESK_DEVICE_KIND overrides it,
 // so one machine can stand in for another OS when testing or making screenshots.
 func Device() string {
-	if k := os.Getenv("SHAREDHUB_DEVICE_KIND"); k == "Mac" || k == "Windows" || k == "Linux" {
+	if k := os.Getenv("SAMEDESK_DEVICE_KIND"); k == "Mac" || k == "Windows" || k == "Linux" {
 		return k
 	}
 	switch runtime.GOOS {
@@ -78,7 +78,7 @@ func New(c Config) (*Hub, error) {
 	if err != nil {
 		return nil, err
 	}
-	h := &Hub{root: root, hubDir: filepath.Join(root, ".hub"), local: c.DataDir, port: c.Port, device: Device(), id: c.Engine.ID.Short().String(),
+	h := &Hub{root: root, hubDir: filepath.Join(root, ".samedesk"), local: c.DataDir, port: c.Port, device: Device(), id: c.Engine.ID.Short().String(),
 		build: strconv.FormatInt(time.Now().Unix(), 10), eng: c.Engine}
 	if err := os.MkdirAll(h.local, 0o700); err != nil {
 		return nil, err
@@ -226,7 +226,7 @@ func (h *Hub) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if c, err := r.Cookie("hub"); err != nil || c.Value != h.key {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.WriteHeader(401)
-			fmt.Fprint(w, "<p style='font:16px system-ui;padding:40px'>Scan the QR code in Shared Hub on your computer to connect.</p>")
+			fmt.Fprint(w, "<p style='font:16px system-ui;padding:40px'>Scan the QR code in SameDesk on your computer to connect.</p>")
 			return
 		}
 	}
@@ -383,7 +383,7 @@ func (h *Hub) saveClips() error {
 	if err := h.clips.save(); err != nil {
 		return err
 	}
-	h.rescan(".hub/clips")
+	h.rescan(".samedesk/clips")
 	return nil
 }
 
@@ -557,7 +557,7 @@ func (h *Hub) notesAPI(w http.ResponseWriter, r *http.Request) error {
 		if err := h.notes.save(); err != nil {
 			return err
 		}
-		h.rescan(".hub/notes")
+		h.rescan(".samedesk/notes")
 		st := mergeNotes(h.notes.all())
 		st.Note = &n
 		h.writeJSON(w, 200, st)
@@ -567,7 +567,7 @@ func (h *Hub) notesAPI(w http.ResponseWriter, r *http.Request) error {
 		if err := h.notes.save(); err != nil {
 			return err
 		}
-		h.rescan(".hub/notes")
+		h.rescan(".samedesk/notes")
 		h.writeJSON(w, 200, mergeNotes(h.notes.all()))
 	default:
 		return errNotFound

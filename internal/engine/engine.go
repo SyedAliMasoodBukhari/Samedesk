@@ -1,4 +1,4 @@
-// Package engine runs Syncthing inside Shared Hub.
+// Package engine runs Syncthing inside SameDesk.
 //
 // Syncthing is embedded as a library (github.com/syncthing/syncthing/lib/syncthing),
 // the same way the syncthing binary starts itself. It gets its own home directory,
@@ -115,9 +115,9 @@ func prepare(cfg config.Wrapper, myID protocol.DeviceID, o Options) error {
 		if c.GUI.APIKey == "" {
 			c.GUI.APIKey = randomKey()
 		}
-		c.Options.StartBrowser = false     // Shared Hub is the UI
+		c.Options.StartBrowser = false     // SameDesk is the UI
 		c.Options.URAccepted = -1          // don't ask about usage reporting
-		c.Options.AutoUpgradeIntervalH = 0 // updates ship with Shared Hub itself
+		c.Options.AutoUpgradeIntervalH = 0 // updates ship with SameDesk itself
 		c.Options.CREnabled = false        // no crash reports to third parties by default
 
 		f, _, ok := c.Folder(o.FolderID)

@@ -14,13 +14,13 @@ import (
 	"strings"
 )
 
-var hidden = map[string]bool{"desktop.ini": true, "Thumbs.db": true, "Shared Hub.url": true}
+var hidden = map[string]bool{"desktop.ini": true, "Thumbs.db": true, "SameDesk.url": true}
 
 func visible(name string) bool {
 	return !strings.HasPrefix(name, ".") && !strings.HasPrefix(name, "~") && !hidden[name]
 }
 
-// safePath resolves a folder-relative path, refusing anything outside the folder or inside .hub.
+// safePath resolves a folder-relative path, refusing anything outside the folder or inside .samedesk.
 func (h *Hub) safePath(rel string) (string, error) {
 	rel = strings.Trim(filepath.FromSlash(rel), `/\`)
 	full := filepath.Clean(filepath.Join(h.root, rel))
@@ -90,7 +90,7 @@ func arrived(info fs.FileInfo) int64 {
 	return t.UnixMilli()
 }
 
-// walk visits visible entries below top (skipping .hub and hidden items), up to limit.
+// walk visits visible entries below top (skipping .samedesk and hidden items), up to limit.
 func walk(top string, limit int, fn func(path string, d fs.DirEntry)) {
 	n := 0
 	_ = filepath.WalkDir(top, func(p string, d fs.DirEntry, err error) error {

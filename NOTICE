@@ -1,11 +1,11 @@
-Shared Hub includes third-party software:
+SameDesk includes third-party software:
 
 Syncthing
   https://github.com/syncthing/syncthing
   Version: v2.1.5 (commit 2ca95cf1498104113fdfde46df4107f2450a0f71), used unmodified as a Go module.
   Licensed under the Mozilla Public License 2.0: https://mozilla.org/MPL/2.0/
   Source for this exact version: https://github.com/syncthing/syncthing/tree/v2.1.5
-  "Syncthing" is a trademark of the Syncthing Foundation. Shared Hub is not affiliated with
+  "Syncthing" is a trademark of the Syncthing Foundation. SameDesk is not affiliated with
   or endorsed by the Syncthing Foundation.
 
 Microsoft Fluent Emoji (3D icons in web/assets)
