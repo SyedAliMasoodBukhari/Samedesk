@@ -7,6 +7,11 @@ import (
 	"path/filepath"
 )
 
+// Installed reports whether this is a copy put in place by an installer or
+// package (as opposed to a build run from a checkout). Only installed copies
+// turn Start at Login on by themselves.
+func Installed() bool { return installed() }
+
 // executable is the running program, with symlinks resolved so a Homebrew-style
 // link or a moved download still points at the real binary.
 func executable() (string, error) {

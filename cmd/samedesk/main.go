@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"syscall"
 
+	"github.com/SyedAliMasoodBukhari/samedesk/internal/autostart"
 	"github.com/SyedAliMasoodBukhari/samedesk/internal/engine"
 	"github.com/SyedAliMasoodBukhari/samedesk/internal/hub"
 	"github.com/SyedAliMasoodBukhari/samedesk/internal/tray"
@@ -95,7 +96,33 @@ func main() {
 		return
 	}
 	go func() { <-stop; tray.Quit() }()
+	loginByDefault(*dataDir)
 	tray.Run(tray.Options{Hub: h, LoginArgs: loginArgs(), OnExit: shutdown})
+}
+
+// loginByDefault turns Start at Login on the first time an installed copy runs
+// with its usual settings, so SameDesk keeps syncing after a restart without
+// anyone having to find the switch. After that it's the user's choice: turned
+// off in the menu, it stays off. Builds run from a checkout, or pointed at other
+// settings with -data, never do this.
+func loginByDefault(dataDir string) {
+	marker := filepath.Join(dataDir, "login-default")
+	custom := false
+	flag.Visit(func(f *flag.Flag) { custom = custom || f.Name == "data" })
+	if custom || !autostart.Installed() {
+		return
+	}
+	if _, err := os.Stat(marker); err == nil {
+		return
+	}
+	if !autostart.Enabled() {
+		if err := autostart.Enable(loginArgs()...); err != nil {
+			slog.Warn("Could not turn on start at login", "error", err)
+			return
+		}
+		slog.Info("Start at login turned on")
+	}
+	_ = os.WriteFile(marker, []byte("Start at login was turned on once, on first run. The menu switch decides from now on.\n"), 0o600)
 }
 
 // loginArgs are the flags to start with at login: whatever was set now, minus

@@ -15,6 +15,12 @@ func desktopPath() string {
 	return filepath.Join(dir, "autostart", "samedesk.desktop")
 }
 
+// installed: the .deb/.rpm copy, or an AppImage.
+func installed() bool {
+	exe, err := executable()
+	return os.Getenv("APPIMAGE") != "" || (err == nil && exe == "/usr/bin/samedesk")
+}
+
 func Enabled() bool { _, err := os.Stat(desktopPath()); return err == nil }
 
 // quote follows the Desktop Entry spec for the Exec key.
@@ -30,6 +36,10 @@ func Enable(args ...string) error {
 	exe, err := executable()
 	if err != nil {
 		return err
+	}
+	// An AppImage runs from a temporary mount; start the AppImage file itself.
+	if img := os.Getenv("APPIMAGE"); img != "" {
+		exe = img
 	}
 	cmd := []string{quote(exe)}
 	for _, a := range args {
