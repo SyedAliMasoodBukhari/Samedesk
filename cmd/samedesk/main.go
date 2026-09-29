@@ -11,11 +11,13 @@ import (
 	"os/signal"
 	"path/filepath"
 	"syscall"
+	"time"
 
 	"github.com/SyedAliMasoodBukhari/samedesk/internal/autostart"
 	"github.com/SyedAliMasoodBukhari/samedesk/internal/engine"
 	"github.com/SyedAliMasoodBukhari/samedesk/internal/hub"
 	"github.com/SyedAliMasoodBukhari/samedesk/internal/tray"
+	"github.com/SyedAliMasoodBukhari/samedesk/internal/update"
 )
 
 // version is set at build time: -ldflags "-X main.version=1.2.3".
@@ -32,6 +34,7 @@ func main() {
 	name := flag.String("name", "", "how this device appears to others (default: the computer's name)")
 	useTray := flag.Bool("tray", true, "show SameDesk in the menu bar / notification area (off: run in the background only)")
 	showVersion := flag.Bool("version", false, "print the version and exit")
+	restarted := flag.Bool("restarted", false, "started by an update: wait for the previous copy to quit")
 	flag.Parse()
 	if *showVersion {
 		fmt.Println("SameDesk", version)
@@ -42,7 +45,12 @@ func main() {
 	withTray := *useTray && tray.Available()
 
 	// Bind the dashboard port first: it doubles as the "already running" check.
+	// After an update, the old copy may still be shutting down: give it a minute.
 	srv, err := hub.Listen(*port)
+	for i := 0; err != nil && *restarted && i < 120; i++ {
+		time.Sleep(500 * time.Millisecond)
+		srv, err = hub.Listen(*port)
+	}
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "SameDesk is already running (port %d is in use). Open http://localhost:%d\n", *port, *port)
 		if *openUI {
@@ -66,7 +74,23 @@ func main() {
 	}
 	slog.Info("Sync engine running", "device", eng.ID.Short().String(), "folder", *folder)
 
-	h, err := hub.New(hub.Config{Root: *folder, DataDir: *dataDir, Port: *port, Engine: eng})
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+	var h *hub.Hub
+	updates := update.New(update.Options{
+		Current: version,
+		Dir:     *dataDir,
+		Enabled: standardInstall(),
+		Idle:    func() bool { return h != nil && h.Idle() },
+		Args:    loginArgs,
+		Quit: func() {
+			select {
+			case stop <- syscall.SIGTERM:
+			default:
+			}
+		},
+	})
+	h, err = hub.New(hub.Config{Root: *folder, DataDir: *dataDir, Port: *port, Engine: eng, Updates: updates})
 	if err != nil {
 		slog.Error("Could not start dashboard", "error", err)
 		eng.Stop()
@@ -82,14 +106,13 @@ func main() {
 	if *openUI {
 		hub.OpenBrowser(url)
 	}
+	go updates.Run()
 
 	shutdown := func() {
 		slog.Info("Shutting down")
 		_ = srv.Close()
 		eng.Stop()
 	}
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 	if !withTray {
 		<-stop
 		shutdown()
@@ -97,7 +120,17 @@ func main() {
 	}
 	go func() { <-stop; tray.Quit() }()
 	loginByDefault(*dataDir)
-	tray.Run(tray.Options{Hub: h, LoginArgs: loginArgs(), OnExit: shutdown})
+	tray.Run(tray.Options{Hub: h, Updates: updates, LoginArgs: loginArgs(), OnExit: shutdown})
+}
+
+// standardInstall is an installed copy running with its usual settings: the only
+// kind that turns Start at Login on by itself or updates itself. Builds run from
+// a checkout, or pointed at other settings with -data, never do either.
+func standardInstall() bool {
+	custom := false
+	flag.Visit(func(f *flag.Flag) { custom = custom || f.Name == "data" })
+	_, released := update.Parse(version)
+	return released && !custom && autostart.Installed()
 }
 
 // loginByDefault turns Start at Login on the first time an installed copy runs
@@ -107,9 +140,7 @@ func main() {
 // settings with -data, never do this.
 func loginByDefault(dataDir string) {
 	marker := filepath.Join(dataDir, "login-default")
-	custom := false
-	flag.Visit(func(f *flag.Flag) { custom = custom || f.Name == "data" })
-	if custom || !autostart.Installed() {
+	if !standardInstall() {
 		return
 	}
 	if _, err := os.Stat(marker); err == nil {
@@ -130,7 +161,7 @@ func loginByDefault(dataDir string) {
 func loginArgs() []string {
 	args := []string{"-open=false"}
 	flag.Visit(func(f *flag.Flag) {
-		if f.Name != "open" && f.Name != "version" {
+		if f.Name != "open" && f.Name != "version" && f.Name != "restarted" {
 			args = append(args, "-"+f.Name+"="+f.Value.String())
 		}
 	})

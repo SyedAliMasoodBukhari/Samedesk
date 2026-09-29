@@ -25,6 +25,7 @@ import (
 
 	"github.com/SyedAliMasoodBukhari/samedesk/internal/engine"
 	"github.com/SyedAliMasoodBukhari/samedesk/internal/pairing"
+	"github.com/SyedAliMasoodBukhari/samedesk/internal/update"
 	"github.com/SyedAliMasoodBukhari/samedesk/web"
 )
 
@@ -40,6 +41,7 @@ type Config struct {
 	DataDir string // per-device state that is never synced
 	Port    int
 	Engine  *engine.Engine
+	Updates *update.Updater // nil: no updates (development builds)
 }
 
 type Hub struct {
@@ -50,6 +52,7 @@ type Hub struct {
 	key                 string
 	build               string
 	eng                 *engine.Engine
+	updates             *update.Updater
 	beacon              *pairing.Beacon
 
 	mu    sync.Mutex
@@ -83,7 +86,7 @@ func New(c Config) (*Hub, error) {
 		return nil, err
 	}
 	h := &Hub{root: root, hubDir: filepath.Join(root, ".samedesk"), local: c.DataDir, port: c.Port, device: Device(), id: c.Engine.ID.Short().String(),
-		build: strconv.FormatInt(time.Now().Unix(), 10), eng: c.Engine}
+		build: strconv.FormatInt(time.Now().Unix(), 10), eng: c.Engine, updates: c.Updates}
 	if err := os.MkdirAll(h.local, 0o700); err != nil {
 		return nil, err
 	}
@@ -298,6 +301,8 @@ func (h *Hub) route(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	case p == "/api/clips" || strings.HasPrefix(p, "/api/clips/"):
 		return h.clipsAPI(w, r)
+	case p == "/api/update" || strings.HasPrefix(p, "/api/update/"):
+		return h.updateAPI(w, r)
 	case p == "/api/pair" || strings.HasPrefix(p, "/api/pair/") || p == "/api/devices/remove":
 		return h.pairAPI(w, r)
 	case p == "/api/notes" || strings.HasPrefix(p, "/api/notes/"):

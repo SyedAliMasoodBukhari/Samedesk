@@ -294,6 +294,12 @@ kbd{font:500 11px var(--sans);padding:1px 5px;border:1px solid var(--line-2);bor
 /* ---------- settings ---------- */
 .set-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
 .stack{display:flex;flex-direction:column;gap:16px;min-width:0}
+.upd-row{display:flex;align-items:center;gap:12px;padding:2px 16px 14px}
+.upd-row>div{flex:1;min-width:0}
+.upd-row b{display:block;font-size:13.5px;font-weight:600}
+.upd-row small{display:block;margin-top:2px;color:var(--muted);font-size:12.5px}
+.upd-foot{padding:0 16px 16px}
+.upd-foot p{margin:0;color:var(--muted);font-size:12.5px}
 .theme-opts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:2px 16px 16px}
 .theme-opts button{display:flex;flex-direction:column;gap:8px;align-items:flex-start;font-size:12.5px;font-weight:500;color:var(--ink-2)}
 .theme-opts button.on{color:var(--ink)}
@@ -604,7 +610,7 @@ kbd{font:500 11px var(--sans);padding:1px 5px;border:1px solid var(--line-2);bor
 
       <!-- SETTINGS -->
       <section class="page" id="page-settings" hidden>
-        <div class="page-head"><div><h1>Settings</h1><p>Appearance, devices and phone access.</p></div></div>
+        <div class="page-head"><div><h1>Settings</h1><p>Appearance, updates, devices and phone access.</p></div></div>
         <div class="set-grid">
           <div class="stack">
             <div class="card">
@@ -615,6 +621,7 @@ kbd{font:500 11px var(--sans);padding:1px 5px;border:1px solid var(--line-2);bor
                 <button data-theme-opt="system"><span class="swatch"><i class="sw-l"><b></b><b></b><b></b></i><i class="sw-d"><b></b><b></b><b></b></i></span>Match system</button>
               </div>
             </div>
+            <div class="card" id="updCard" hidden><div class="card-h"><h2>Updates</h2><button class="btn" id="updCheck" style="margin-left:auto">Check now</button></div><div id="updBody"></div></div>
             <div class="card"><div class="card-h"><h2>More actions</h2></div><div class="mlist" id="moreActions"></div></div>
           </div>
           <div class="card"><div class="card-h"><h2>Devices</h2><span class="aside" id="syncAside"></span><button class="btn" id="addDeviceSet" style="margin-left:10px"><span data-i="plus"></span>Add a device</button></div><div id="devRows"></div></div>
@@ -1542,6 +1549,35 @@ document.addEventListener('click', async e => {
 });
 ['#addDeviceSide', '#addDeviceSet'].forEach(s => $(s).onclick = openPair);
 
+// Updates: what's installed, what's out, and whether SameDesk installs it by itself.
+let upd = null;
+async function loadUpdate() { try { upd = await api('/api/update'); } catch { return; } renderUpdate(); }
+function renderUpdate() {
+  const card = $('#updCard');
+  if (!upd || !me.local) { card.hidden = true; return; }
+  card.hidden = false;
+  const u = upd, busy = ['checking', 'downloading', 'installing'].includes(u.state), dev = !u.enabled;
+  $('#updCheck').hidden = dev || busy;
+  let line = 'Up to date', act = '';
+  if (dev) line = 'Updates are off for this copy (a development build, or custom settings).';
+  else if (u.state === 'checking') line = 'Checking for updates…';
+  else if (u.state === 'installing') line = `Installing ${u.latest}. SameDesk restarts in a moment.`;
+  else if (u.state === 'downloading') line = `Downloading ${u.latest}…`;
+  else if (u.available && (u.state === 'manual' || !u.canAuto)) { line = `${u.latest} is available.`; if (u.page) act = `<a class="btn primary" href="${esc(u.page)}" target="_blank" rel="noopener">Download</a>`; }
+  else if (u.available) { line = `${u.latest} is ${u.state === 'ready' ? 'ready to install' : 'available'}.`; act = `<button class="btn primary" id="updNow">Update now</button>`; }
+  else if (u.state === 'error') line = u.error;
+  const when = u.checked && !busy ? ` · checked ${ago(u.checked)}` : '';
+  const note = u.available && u.error && u.state !== 'error' ? `<p>${esc(u.error)}</p>` : '';
+  $('#updBody').innerHTML = `<div class="upd-row"><div><b>SameDesk ${esc(u.current)}</b><small>${esc(line)}${when}</small></div>${act}</div>
+    <div class="upd-foot">${u.canAuto ? `<label class="switch${u.auto ? ' on' : ''}" id="updAuto"><i></i>Install updates automatically</label>`
+      : dev ? '' : '<p>This copy can’t replace itself (it came from a package manager, or its folder is read-only). New versions are on the release page.</p>'}${note}</div>`;
+}
+$('#updCheck').onclick = async () => { upd = await post('/api/update/check', {}); renderUpdate(); setTimeout(loadUpdate, 1500); setTimeout(loadUpdate, 5000); };
+$('#updBody').addEventListener('click', async e => {
+  if (e.target.closest('#updNow')) { upd = await post('/api/update/install', {}); renderUpdate(); setTimeout(loadUpdate, 1500); }
+  if (e.target.closest('#updAuto')) { upd = await post('/api/update/auto', {auto: !upd.auto}); renderUpdate(); }
+});
+
 // A device asking to connect: show who it is and the check code; the user decides.
 const prompted = new Set();
 async function checkPending(from = syncData?.pending) {
@@ -1697,6 +1733,7 @@ addEventListener('pagehide', () => store.set('hub.seen', Date.now()));
   setInterval(loadNotes, 3000);
   setInterval(() => { loadFiles(); loadRecent(); }, 4000);
   setInterval(loadSync, 2500);
+  loadUpdate(); setInterval(loadUpdate, 10000);
   setInterval(() => { if (needReload && safeToReload()) location.reload(); }, 1000);
   setInterval(() => { $$('[data-at]').forEach(t => t.textContent = ago(+t.dataset.at)); setGreeting(); }, 30000);
 })();

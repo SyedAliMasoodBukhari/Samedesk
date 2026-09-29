@@ -112,6 +112,7 @@ Copy something on your Mac and it is waiting on your PC a second later. Drop a f
 | **Search everything** | <kbd>⌘</kbd> <kbd>K</kbd> finds clips, files and notes, and runs actions like *Send clipboard* or *New note*. |
 | **Your phone too** | Scan a QR code to open the dashboard on a phone on the same Wi-Fi. |
 | **Light and dark** | Follows your system, or pick one in Settings. |
+| **Stays up to date** | New versions install themselves when sync is quiet, after checking their signature. Or choose *Update now* in Settings. |
 | **Every desktop** | macOS (Apple Silicon and Intel), Windows (x64 and ARM) and Linux (x64 and ARM). |
 
 <br>
@@ -196,6 +197,7 @@ flowchart LR
 - **Encrypted end to end.** Devices connect over TLS, and each device's ID is the fingerprint of its own key, so a device can't be impersonated.
 - **You approve every device.** Pairing needs a click on both computers, and a check code derived from both device IDs lets you confirm you're pairing with the right one.
 - **Discovery only while you're pairing.** Nothing is announced on the local network until someone opens *Add a device*; then the SameDesk computers there answer with their name and device code. A pairing request only opens SameDesk on screen when it comes from a device on the same network that is pairing at that moment.
+- **Updates are signed.** SameDesk checks for new versions on this project's GitHub releases and installs one only if its checksum list is signed with the SameDesk release key, whose public half is built into the app, and the download matches. Turn automatic updates off in Settings if you prefer.
 - **Relays can't read your data.** When a direct connection isn't possible, Syncthing's community relays pass along encrypted traffic they cannot decrypt.
 - **The dashboard is yours alone.** It answers only this computer's browser, and phones only after scanning the key link shown in Settings.
 
@@ -248,7 +250,7 @@ make windows-installer   # Windows installers (needs NSIS: brew install makensis
 make linux-packages      # .deb and .rpm
 ```
 
-Pushing a tag such as `v0.1.0` builds every installer on GitHub Actions into a draft release.
+Pushing a tag such as `v0.1.0` builds every installer on GitHub Actions into a draft release, and signs its checksum list with the `SAMEDESK_SIGNING_KEY` secret (see `tools/sign`). Apps only update to signed releases.
 
 - `-tags noassets` leaves out Syncthing's own web interface; SameDesk is the interface.
 - macOS builds use cgo so the sync engine can watch the folder with FSEvents. Windows and Linux build without cgo (pure-Go SQLite), so every platform builds from any computer.
@@ -265,6 +267,8 @@ internal/hub/       dashboard server: clipboard, notes, files, sync status, per-
 internal/pairing/   finding nearby devices when "Add a device" is open
 internal/tray/      menu bar and tray icon
 internal/autostart/ start at login on each OS
+internal/update/    signed automatic updates
+tools/sign/         release signing key and signatures
 packaging/          icons, .dmg, Windows installer and Linux packages
 web/                the dashboard, compiled into the binary
 docs/images/        screenshots for this page
@@ -283,7 +287,7 @@ docs/images/        screenshots for this page
 - [x] Installers: `.dmg`, Windows installer, AppImage, `.deb` and `.rpm`
 - [ ] Signed and notarised builds, so first launch needs no extra step
 - [ ] Homebrew, winget and Flathub
-- [ ] Automatic updates, including new Syncthing releases
+- [x] Automatic, signed updates (macOS, Windows and AppImage; `.deb` and `.rpm` update through your package manager)
 
 <br>
 

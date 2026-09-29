@@ -23,6 +23,7 @@ VIAddVersionKey "ProductVersion" "${VERSION}"
 VIAddVersionKey "LegalCopyright" "The SameDesk authors, MIT licence"
 
 !include "MUI2.nsh"
+!include "FileFunc.nsh"
 !define MUI_ICON "..\icons\samedesk.ico"
 !define MUI_UNICON "..\icons\samedesk.ico"
 !define MUI_FINISHPAGE_RUN "$INSTDIR\${APP}.exe"
@@ -62,6 +63,16 @@ Section
   WriteRegDWORD HKCU "${UNINST}" "NoRepair" 1
   WriteRegDWORD HKCU "${UNINST}" "EstimatedSize" 30000
 SectionEnd
+
+; Updates run this installer silently with /RELAUNCH; start the new version then
+; (the finish page, which normally offers to open it, isn't shown when silent).
+Function .onInstSuccess
+  ${GetParameters} $R0
+  ClearErrors
+  ${GetOptions} $R0 "/RELAUNCH" $R1
+  IfErrors +2
+  Exec '"$INSTDIR\${APP}.exe" -open=false -restarted'
+FunctionEnd
 
 ; Removes the program, its shortcut and its start-at-login entry. Settings and
 ; the shared folder are left alone: they are the user's.
