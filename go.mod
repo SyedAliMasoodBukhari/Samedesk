@@ -3,8 +3,10 @@ module github.com/SyedAliMasoodBukhari/samedesk
 go 1.27.1
 
 require (
+	fyne.io/systray v1.12.2
 	github.com/syncthing/syncthing v1.30.0-rc.1.0.20260908065755-2ca95cf14981
 	github.com/thejerf/suture/v4 v4.0.6
+	golang.org/x/sys v0.47.0
 )
 
 require (
@@ -20,6 +22,7 @@ require (
 	github.com/go-ldap/ldap/v3 v3.4.14 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
+	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
@@ -53,7 +56,6 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	golang.org/x/crypto v0.55.0 // indirect
 	golang.org/x/net v0.58.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/text v0.41.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect

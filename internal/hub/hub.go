@@ -387,6 +387,16 @@ func (h *Hub) saveClips() error {
 	return nil
 }
 
+// addClip puts a new clip of this device's on top. The caller holds h.mu.
+func (h *Hub) addClip(c Clip) error {
+	m := &h.clips.mine
+	m.Clips = append([]Clip{c}, m.Clips...)
+	if len(m.Clips) > maxClips {
+		m.Clips = m.Clips[:maxClips]
+	}
+	return h.saveClips()
+}
+
 func (h *Hub) deleteClip(id string) {
 	live := h.mergedClips().Clips
 	var clip *ClipOut
@@ -472,12 +482,7 @@ func (h *Hub) clipsAPI(w http.ResponseWriter, r *http.Request) error {
 				c.Sensitive, c.Expires = true, c.At+sensitiveTTL
 			}
 		}
-		m := &h.clips.mine
-		m.Clips = append([]Clip{c}, m.Clips...)
-		if len(m.Clips) > maxClips {
-			m.Clips = m.Clips[:maxClips]
-		}
-		if err := h.saveClips(); err != nil {
+		if err := h.addClip(c); err != nil {
 			return err
 		}
 	case id == "" && r.Method == http.MethodDelete: // clear all, keeping pinned

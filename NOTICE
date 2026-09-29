@@ -13,4 +13,8 @@ Microsoft Fluent Emoji (3D icons in web/assets)
   Copyright (c) Microsoft Corporation. Licensed under the MIT License
   (see web/assets/LICENSE-fluentui-emoji.txt).
 
+fyne.io/systray (the tray icon and menu)
+  https://github.com/fyne-io/systray
+  Licensed under the Apache License 2.0: https://www.apache.org/licenses/LICENSE-2.0
+
 Syncthing's own dependencies are listed in go.mod / go.sum and keep their respective licences.
