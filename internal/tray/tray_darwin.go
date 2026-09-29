@@ -34,7 +34,6 @@ func setIcon() { systray.SetTemplateIcon(templateIcon, colourIcon) }
 // On macOS a click opens the menu, like every other menu bar item.
 func onTapped(func()) {}
 
-func showFlash(msg string) { systray.SetTitle(" " + msg) }
-func clearFlash(string)    { systray.SetTitle("") }
-
 func available() bool { return true }
+
+func itemIcon(p []byte) []byte { return p }

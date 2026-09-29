@@ -108,7 +108,7 @@ Copy something on your Mac and it is waiting on your PC a second later. Drop a f
 | **Know it arrived** | Your latest clip says *On Office PC* once it's there, or *Waiting for Office PC* while that computer is offline. |
 | **Shared folder** | A normal folder on every computer, kept identical. Use it from Finder, Explorer or your file manager as well as the dashboard. |
 | **Notes** | Synced notes with autosave. The newest edit wins, without conflict copies. |
-| **Always at hand** | A quiet icon in the menu bar or tray shows whether you're in sync, copies the latest clip from your other computer in one click and sends what you just copied. It can start at login. |
+| **Always at hand** | A quiet icon in the menu bar or tray shows whether you're up to date and opens SameDesk or the shared folder. It can start at login. |
 | **Search everything** | <kbd>⌘</kbd> <kbd>K</kbd> finds clips, files and notes, and runs actions like *Send clipboard* or *New note*. |
 | **Your phone too** | Scan a QR code to open the dashboard on a phone on the same Wi-Fi. |
 | **Light and dark** | Follows your system, or pick one in Settings. |

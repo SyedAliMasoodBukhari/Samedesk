@@ -1,71 +1,49 @@
 package tray
 
 import (
+	"bytes"
+	"image/png"
 	"testing"
 
 	"github.com/SyedAliMasoodBukhari/samedesk/internal/hub"
 )
 
 func TestDescribe(t *testing.T) {
-	pc := hub.Peer{Name: "Office PC", Connected: true, Shared: true}
-	offline := hub.Peer{Name: "Office PC"}
-	laptop := hub.Peer{Name: "Linux laptop", Connected: true, Shared: true}
+	on := hub.Peer{Name: "Office PC", Connected: true, Shared: true}
+	off := hub.Peer{Name: "Office PC"}
 	for _, c := range []struct {
-		s          hub.SyncStatus
-		line, peer string
+		s    hub.SyncStatus
+		want state
 	}{
-		{hub.SyncStatus{}, "The sync engine isn't responding", ""},
-		{hub.SyncStatus{OK: true}, "No devices yet", ""},
-		{hub.SyncStatus{OK: true, Peers: []hub.Peer{pc}}, "In sync with Office PC", "Office PC"},
-		{hub.SyncStatus{OK: true, Peers: []hub.Peer{offline}}, "Office PC is offline", "Office PC"},
-		{hub.SyncStatus{OK: true, Paused: true, Peers: []hub.Peer{pc}}, "Sync is paused", "Office PC"},
-		{hub.SyncStatus{OK: true, Receiving: 3, Peers: []hub.Peer{pc}}, "Syncing with Office PC…", "Office PC"},
-		{hub.SyncStatus{OK: true, Errors: 2, Peers: []hub.Peer{pc}}, "2 files couldn't sync", "Office PC"},
-		{hub.SyncStatus{OK: true, Peers: []hub.Peer{{Name: "Office PC", Connected: true}}}, "Waiting for Office PC to accept", "Office PC"},
-		{hub.SyncStatus{OK: true, Peers: []hub.Peer{pc, laptop}}, "In sync with 2 devices", ""},
-		{hub.SyncStatus{OK: true, Peers: []hub.Peer{offline, laptop}}, "In sync with 1 of 2 devices", ""},
-		{hub.SyncStatus{OK: true, Peers: []hub.Peer{offline, {Name: "Linux laptop"}}}, "Your devices are offline", ""},
+		{hub.SyncStatus{}, state{"Not running", red}},
+		{hub.SyncStatus{OK: true}, state{"No devices yet", grey}},
+		{hub.SyncStatus{OK: true, Peers: []hub.Peer{on}}, state{"Up to date", green}},
+		{hub.SyncStatus{OK: true, Peers: []hub.Peer{off}}, state{"Offline", grey}},
+		{hub.SyncStatus{OK: true, Peers: []hub.Peer{off, on}}, state{"Up to date", green}},
+		{hub.SyncStatus{OK: true, Paused: true, Peers: []hub.Peer{on}}, state{"Paused", grey}},
+		{hub.SyncStatus{OK: true, Receiving: 3, Peers: []hub.Peer{on}}, state{"Syncing…", blue}},
+		{hub.SyncStatus{OK: true, Peers: []hub.Peer{{Connected: true, Need: 2}}}, state{"Syncing…", blue}},
+		{hub.SyncStatus{OK: true, Errors: 2, Peers: []hub.Peer{on}}, state{"Some files couldn't sync", red}},
 	} {
-		line, peer := describe(c.s)
-		if line != c.line || peer != c.peer {
-			t.Errorf("describe(%+v) = %q, %q; want %q, %q", c.s, line, peer, c.line, c.peer)
+		if got := describe(c.s); got != c.want {
+			t.Errorf("describe(%+v) = %+v; want %+v", c.s, got, c.want)
 		}
 	}
 }
 
-func TestLatestTitle(t *testing.T) {
-	yes, no := true, false
-	clip := func(c hub.Clip, exists *bool) hub.Incoming {
-		return hub.Incoming{ClipOut: hub.ClipOut{Clip: c, Exists: exists}, Sender: "Office PC"}
+func TestDot(t *testing.T) {
+	img, err := png.Decode(bytes.NewReader(dot(green)))
+	if err != nil {
+		t.Fatal(err)
 	}
-	for _, c := range []struct {
-		in      hub.Incoming
-		title   string
-		enabled bool
-	}{
-		{clip(hub.Clip{Kind: "text", Text: "\n  Launch copy, final\nsecond line"}, nil), "Copy from Office PC: “Launch copy, final”", true},
-		{clip(hub.Clip{Kind: "text", Text: "hunter2", Sensitive: true}, nil), "Copy private text from Office PC", true},
-		{clip(hub.Clip{Kind: "file", Name: "shot.png"}, &yes), "Copy image from Office PC: “shot.png”", true},
-		{clip(hub.Clip{Kind: "file", Name: "report.pdf"}, &yes), "Show file from Office PC: “report.pdf”", true},
-		{clip(hub.Clip{Kind: "file", Name: "report.pdf"}, &no), "Receiving “report.pdf” from Office PC…", false},
-	} {
-		title, enabled := latestTitle(c.in)
-		if title != c.title || enabled != c.enabled {
-			t.Errorf("latestTitle(%+v) = %q, %v; want %q, %v", c.in.Clip, title, enabled, c.title, c.enabled)
-		}
+	if _, _, _, a := img.At(16, 16).RGBA(); a != 0xffff {
+		t.Errorf("centre alpha = %x; want opaque", a)
 	}
-}
-
-func TestShort(t *testing.T) {
-	for in, want := range map[string]string{
-		"short":                                "short",
-		"The quick brown fox jumps over it":    "The quick brown fox jumps…",
-		"Supercalifragilisticexpialidocious!!": "Supercalifragilisticexpiali…",
-		"  spaced\t out   text ":               "spaced out text",
-		"ابجد هوز حطي كلمن سعفص قرشت ثخذ ضظغ": "ابجد هوز حطي كلمن سعفص…",
-	} {
-		if got := short(in, 27); got != want {
-			t.Errorf("short(%q) = %q; want %q", in, got, want)
-		}
+	if _, _, _, a := img.At(1, 1).RGBA(); a != 0 {
+		t.Errorf("corner alpha = %x; want clear", a)
+	}
+	ico := pngToICO(dot(blue))
+	if !bytes.Equal(ico[:6], []byte{0, 0, 1, 0, 1, 0}) || !bytes.HasPrefix(ico[22:], []byte("\x89PNG")) {
+		t.Errorf("bad ico header % x", ico[:24])
 	}
 }
