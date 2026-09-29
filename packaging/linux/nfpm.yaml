@@ -1,0 +1,34 @@
+# .deb and .rpm packages, built by `make linux-packages` with nfpm.
+# ${VERSION} and ${ARCH} (amd64/arm64) come from the environment; the binary is
+# staged at dist/linux/samedesk.
+name: samedesk
+version: ${VERSION}
+arch: ${ARCH}
+platform: linux
+maintainer: The SameDesk authors <noreply@github.com>
+description: |
+  Shared clipboard, files and notes across your computers.
+  One app with an embedded Syncthing engine: no accounts, no cloud.
+homepage: https://github.com/SyedAliMasoodBukhari/Samedesk
+license: MIT
+section: utils
+suggests:
+  - gnome-shell-extension-appindicator
+contents:
+  - src: dist/linux/samedesk
+    dst: /usr/bin/samedesk
+    file_info: {mode: 0755}
+  - src: packaging/linux/samedesk.desktop
+    dst: /usr/share/applications/samedesk.desktop
+  - src: packaging/icons/samedesk-48.png
+    dst: /usr/share/icons/hicolor/48x48/apps/samedesk.png
+  - src: packaging/icons/samedesk-128.png
+    dst: /usr/share/icons/hicolor/128x128/apps/samedesk.png
+  - src: packaging/icons/samedesk-256.png
+    dst: /usr/share/icons/hicolor/256x256/apps/samedesk.png
+  - src: packaging/icons/samedesk-512.png
+    dst: /usr/share/icons/hicolor/512x512/apps/samedesk.png
+  - src: LICENSE
+    dst: /usr/share/doc/samedesk/copyright
+  - src: NOTICE
+    dst: /usr/share/doc/samedesk/NOTICE

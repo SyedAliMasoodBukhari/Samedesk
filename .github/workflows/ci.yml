@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, feature]
+
+permissions:
+  contents: read
+
+jobs:
+  linux-windows:
+    name: Test (Linux) and build (Linux, Windows)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: make test
+      - name: Cross-build
+        run: |
+          for t in linux/amd64 linux/arm64 windows/amd64 windows/arm64; do
+            GOOS=${t%/*} GOARCH=${t#*/} CGO_ENABLED=0 go vet -tags noassets ./...
+            GOOS=${t%/*} GOARCH=${t#*/} CGO_ENABLED=0 go build -tags noassets -o /dev/null ./cmd/samedesk
+          done
+
+  macos:
+    name: Test and build (macOS)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: make test
+      - run: make build

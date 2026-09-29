@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=SameDesk
+Comment=Shared clipboard, files and notes across your computers
+Exec=samedesk
+Icon=samedesk
+Terminal=false
+Categories=Utility;Network;FileTransfer;
+Keywords=clipboard;sync;files;notes;syncthing;
+StartupNotify=false

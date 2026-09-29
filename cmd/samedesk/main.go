@@ -17,6 +17,9 @@ import (
 	"github.com/SyedAliMasoodBukhari/samedesk/internal/tray"
 )
 
+// version is set at build time: -ldflags "-X main.version=1.2.3".
+var version = "dev"
+
 func main() {
 	home, _ := os.UserHomeDir()
 	confDir, _ := os.UserConfigDir()
@@ -27,7 +30,12 @@ func main() {
 	openUI := flag.Bool("open", true, "open the dashboard in a browser on start")
 	name := flag.String("name", "", "how this device appears to others (default: the computer's name)")
 	useTray := flag.Bool("tray", true, "show SameDesk in the menu bar / notification area (off: run in the background only)")
+	showVersion := flag.Bool("version", false, "print the version and exit")
 	flag.Parse()
+	if *showVersion {
+		fmt.Println("SameDesk", version)
+		return
+	}
 	*dataDir, _ = filepath.Abs(*dataDir)
 	*folder, _ = filepath.Abs(*folder)
 	withTray := *useTray && tray.Available()
@@ -69,7 +77,7 @@ func main() {
 		}
 	}()
 	url := fmt.Sprintf("http://localhost:%d", *port)
-	slog.Info("SameDesk is ready", "url", url)
+	slog.Info("SameDesk is ready", "version", version, "url", url)
 	if *openUI {
 		hub.OpenBrowser(url)
 	}
@@ -95,7 +103,7 @@ func main() {
 func loginArgs() []string {
 	args := []string{"-open=false"}
 	flag.Visit(func(f *flag.Flag) {
-		if f.Name != "open" {
+		if f.Name != "open" && f.Name != "version" {
 			args = append(args, "-"+f.Name+"="+f.Value.String())
 		}
 	})
