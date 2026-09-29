@@ -108,6 +108,7 @@ func New(c Config) (*Hub, error) {
 	}
 	h.beacon = pairing.Start(c.Engine.ID.String(), c.Engine.Name(), h.device)
 	go h.expiryLoop()
+	go h.hideLoop()
 	return h, nil
 }
 

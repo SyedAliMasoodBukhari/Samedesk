@@ -14,10 +14,10 @@ import (
 	"strings"
 )
 
-var hidden = map[string]bool{"desktop.ini": true, "Thumbs.db": true, "SameDesk.url": true}
-
+// visible is what the dashboard lists: nothing hidden on any computer (see hide.go),
+// no Office lock files ("~$report.docx") and no leftover prototype shortcut.
 func visible(name string) bool {
-	return !strings.HasPrefix(name, ".") && !strings.HasPrefix(name, "~") && !hidden[name]
+	return !hiddenName(name) && !strings.HasPrefix(name, "~") && name != "SameDesk.url"
 }
 
 // safePath resolves a folder-relative path, refusing anything outside the folder or inside .samedesk.
