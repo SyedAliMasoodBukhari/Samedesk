@@ -80,21 +80,19 @@ func (h *Hub) syncStatus() SyncStatus {
 		h.mu.Unlock()
 		return d
 	}
-	// Each device's hub files say what it is ("Windows", "Linux"…), keyed by short device ID.
-	labels := map[string]string{}
+	// Each device's hub files say what it is ("Windows", "Linux"…) and what it's
+	// called right now, keyed by short device ID.
+	who := map[string]identity{}
 	for short, d := range h.notes.named() {
-		if d.Device != "" {
-			labels[short] = d.Device
-		}
+		who[short] = identity{d.Device, d.Name}
 	}
 	for short, d := range h.clips.named() {
-		if d.Device != "" {
-			labels[short] = d.Device
-		}
+		i := who[short]
+		who[short] = identity{firstOf(d.Device, i.kind), firstOf(d.Name, i.name)}
 	}
 	h.mu.Unlock()
 
-	data, err := h.fetchStatus(labels)
+	data, err := h.fetchStatus(who)
 	if err != nil {
 		data = SyncStatus{Reason: "The sync engine isn't responding"}
 	}
@@ -104,7 +102,18 @@ func (h *Hub) syncStatus() SyncStatus {
 	return data
 }
 
-func (h *Hub) fetchStatus(labels map[string]string) (SyncStatus, error) {
+type identity struct{ kind, name string }
+
+func firstOf(s ...string) string {
+	for _, v := range s {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
+}
+
+func (h *Hub) fetchStatus(who map[string]identity) (SyncStatus, error) {
 	fid := url.QueryEscape(h.eng.FolderID)
 	var folder struct {
 		Devices []struct {
@@ -150,15 +159,13 @@ func (h *Hub) fetchStatus(labels map[string]string) (SyncStatus, error) {
 			RemoteState            string `json:"remoteState"`
 		}
 		_ = h.st(fmt.Sprintf("/rest/db/completion?folder=%s&device=%s", fid, url.QueryEscape(pid)), &comp)
-		name := names[pid]
-		if name == "" {
-			name = pid[:7]
+		// The name a device gives itself wins over the one it had when it was paired.
+		var me identity
+		if id, err := protocol.DeviceIDFromString(pid); err == nil {
+			me = who[id.Short().String()]
 		}
-		// Show "Windows", "Mac" or "Linux" once that device's hub has written its files here.
-		label := name
-		if id, err := protocol.DeviceIDFromString(pid); err == nil && labels[id.Short().String()] != "" {
-			label = labels[id.Short().String()]
-		}
+		name := firstOf(me.name, names[pid], me.kind, "Device "+pid[:7])
+		label := firstOf(me.kind, name) // "Windows", "Mac" or "Linux" once its files are here
 		p := Peer{ID: pid, Name: name, Label: label, Connected: conns.Connections[pid].Connected, Need: comp.NeedItems + comp.NeedDeletes,
 			Shared: comp.RemoteState == "valid"}
 		if seen := stats[pid].LastSeen; seen != "" && !strings.HasPrefix(seen, "1970") {

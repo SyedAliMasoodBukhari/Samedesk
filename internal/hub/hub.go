@@ -93,9 +93,19 @@ func New(c Config) (*Hub, error) {
 	if h.notes, err = openStore(filepath.Join(h.hubDir, "notes"), h.id, func() noteDoc { return noteDoc{} }, fillNoteDoc); err != nil {
 		return nil, err
 	}
-	full := c.Engine.ID.String()
-	h.clips.mine.Device, h.clips.mine.ID = h.device, full
-	h.notes.mine.Device, h.notes.mine.ID = h.device, full
+	// Each device writes who it is into its own files, so the others always show
+	// its current name, even after the computer is renamed.
+	full, name := c.Engine.ID.String(), c.Engine.Name()
+	if m := &h.clips.mine; m.Device != h.device || m.ID != full || m.Name != name {
+		m.Device, m.ID, m.Name = h.device, full, name
+		_ = h.clips.save()
+		h.rescan(".samedesk/clips")
+	}
+	if m := &h.notes.mine; m.Device != h.device || m.ID != full || m.Name != name {
+		m.Device, m.ID, m.Name = h.device, full, name
+		_ = h.notes.save()
+		h.rescan(".samedesk/notes")
+	}
 	h.beacon = pairing.Start(c.Engine.ID.String(), c.Engine.Name(), h.device)
 	go h.expiryLoop()
 	return h, nil
