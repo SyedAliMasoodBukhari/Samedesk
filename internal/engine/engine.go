@@ -11,8 +11,10 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/syncthing/syncthing/lib/config"
@@ -164,14 +166,16 @@ func (e *Engine) Name() string {
 }
 
 // AddPeer trusts a device and shares the folder with it. Syncthing then connects
-// on its own, over the local network or through relays.
-func (e *Engine) AddPeer(id protocol.DeviceID, name string) error {
+// on its own, over the local network or through relays. Addresses already known
+// (say, from the device answering on the local network) are tried first, so the
+// connection starts at once instead of waiting for discovery.
+func (e *Engine) AddPeer(id protocol.DeviceID, name string, addrs ...string) error {
 	w, err := e.cfg.Modify(func(c *config.Configuration) {
 		d, _, ok := c.Device(id)
 		if !ok {
 			d = c.Defaults.Device.Copy()
 			d.DeviceID = id
-			d.Addresses = []string{"dynamic"}
+			d.Addresses = append(addrs, "dynamic")
 		}
 		if name != "" {
 			d.Name = name
@@ -187,6 +191,18 @@ func (e *Engine) AddPeer(id protocol.DeviceID, name string) error {
 	}
 	w.Wait()
 	return nil
+}
+
+// SyncPort is the port Syncthing accepts connections on (TCP and QUIC share it).
+func (e *Engine) SyncPort() int {
+	for _, a := range e.cfg.Options().ListenAddresses() {
+		if u, err := url.Parse(a); err == nil && (u.Scheme == "tcp" || u.Scheme == "quic") {
+			if p, err := strconv.Atoi(u.Port()); err == nil && p > 0 {
+				return p
+			}
+		}
+	}
+	return 0
 }
 
 // RemovePeer stops sharing with a device and forgets it.

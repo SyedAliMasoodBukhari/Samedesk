@@ -716,7 +716,8 @@ const fm = () => me.host === 'Windows' ? 'Explorer' : me.host === 'Mac' ? 'Finde
 
 /* ---------- basics ---------- */
 async function api(path, opts = {}) {
-  const r = await fetch(path, {...opts, headers: {'X-Hub': '1', ...(typeof opts.body === 'string' ? {'Content-Type': 'application/json'} : {})}});
+  // X-Visible: a page someone can see; the hub opens a new one for pairing requests only when there's none.
+  const r = await fetch(path, {...opts, headers: {'X-Hub': '1', 'X-Visible': document.visibilityState === 'visible' ? '1' : '0', ...(typeof opts.body === 'string' ? {'Content-Type': 'application/json'} : {})}});
   const b = r.headers.get('X-Build');
   if (b) { if (!BUILD) BUILD = b; else if (b !== BUILD) needReload = true; }
   if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || `Request failed (${r.status})`);
@@ -816,7 +817,11 @@ function route() {
   if (page === 'notes') renderNotes();
   if (page === 'settings') renderSettings();
 }
-addEventListener('hashchange', () => { if (location.hash === '#add-device') { history.replaceState(null, '', '#home'); route(); openPair(); } else route(); });
+addEventListener('hashchange', () => {
+  if (location.hash === '#add-device') { history.replaceState(null, '', '#home'); route(); openPair(); }
+  else if (location.hash === '#pair-request') { history.replaceState(null, '', '#home'); route(); loadSync(); }
+  else route();
+});
 $('#tabbar').onclick = e => { const b = e.target.closest('button'); if (b) location.hash = b.dataset.page; };
 
 /* ---------- menus ---------- */
@@ -1474,6 +1479,7 @@ async function pollPair() {
   if (!pairUI) return;
   try {
     pairUI.st = await api('/api/pair');
+    checkPending(pairUI.st?.pending);   // the other device may ask first
     if (pairUI.step === 'wait') {
       syncData = await api('/api/sync');
       const p = syncData.peers?.find(x => x.id === pairUI.target.id);
@@ -1484,10 +1490,12 @@ async function pollPair() {
 }
 function nearHTML(st) {
   if (!st?.available) return `<div class="near-empty"><span class="ghost"></span><span>Finding devices on this network isn't available on this computer. Use a code below.</span></div>`;
-  const list = st.nearby || [];
-  if (!list.length) return `<div class="near-empty"><span class="ghost"></span><span>On your other computer, open SameDesk and choose <b style="color:var(--ink-2);font-weight:550">Add a device</b>. It appears here.</span></div>`;
+  const list = st.nearby || [], asking = new Set((st.pending || []).map(p => p.id));
+  if (!list.length) return `<div class="near-empty"><span class="ghost"></span><span>Open SameDesk on your other computer, on the same network. It appears here by itself.</span></div>`;
   return `<div class="near">${list.map(n => `<div class="near-i"><span class="dev3d">${dev3d(n.os)}</span><div style="flex:1;min-width:0"><b>${esc(n.name)}</b><small>${esc([n.os, n.addr].filter(Boolean).join(' · '))}</small></div>
-    ${n.paired ? `<span style="color:var(--ok);font-size:12.5px;display:flex;gap:5px;align-items:center">${I.check}Paired</span>` : `<button class="btn primary" data-pair="${esc(n.id)}">Pair</button>`}</div>`).join('')}</div>`;
+    ${n.paired ? `<span style="color:var(--ok);font-size:12.5px;display:flex;gap:5px;align-items:center">${I.check}Paired</span>`
+      : asking.has(n.id) ? `<span style="color:var(--ink-3);font-size:12.5px">Asking to pair…</span>`
+      : `<button class="btn primary" data-pair="${esc(n.id)}">Pair</button>`}</div>`).join('')}</div>`;
 }
 function renderPair() {
   if (!pairUI) return;
@@ -1536,8 +1544,8 @@ document.addEventListener('click', async e => {
 
 // A device asking to connect: show who it is and the check code; the user decides.
 const prompted = new Set();
-async function checkPending() {
-  const list = (syncData?.pending || []).filter(p => !prompted.has(p.id));
+async function checkPending(from = syncData?.pending) {
+  const list = (from || []).filter(p => !prompted.has(p.id));
   if (!list.length || !me.local || dlgOpen) return;
   const p = list[0]; prompted.add(p.id);
   const ok = await requestDialog(p);
@@ -1680,14 +1688,15 @@ addEventListener('pagehide', () => store.set('hub.seen', Date.now()));
   if (!canReadClipboard()) $('#qaClipboard').hidden = true;
   setGreeting(); renderDevices();
   const wantsPair = location.hash === '#add-device';
-  if (wantsPair) history.replaceState(null, '', '#home');
+  // Opened by SameDesk for a pairing request: the request dialog appears once sync status loads.
+  if (wantsPair || location.hash === '#pair-request') history.replaceState(null, '', '#home');
   route();
   if (wantsPair) openPair();
   loadClips(); loadNotes(); loadRecent(); loadSync();
   setInterval(loadClips, 1500);
   setInterval(loadNotes, 3000);
   setInterval(() => { loadFiles(); loadRecent(); }, 4000);
-  setInterval(loadSync, 5000);
+  setInterval(loadSync, 2500);
   setInterval(() => { if (needReload && safeToReload()) location.reload(); }, 1000);
   setInterval(() => { $$('[data-at]').forEach(t => t.textContent = ago(+t.dataset.at)); setGreeting(); }, 30000);
 })();

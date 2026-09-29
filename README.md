@@ -77,7 +77,7 @@ Copy something on your Mac and it is waiting on your PC a second later. Drop a f
         <source media="(prefers-color-scheme: dark)" srcset="docs/images/pair-dark.png">
         <img src="docs/images/pair-light.png" alt="Add a device: a nearby computer ready to pair">
       </picture>
-      <p><b>Pairing.</b> Open <i>Add a device</i> on both computers and they find each other. Click <i>Pair</i>, check that both screens show the same code, accept. Not on the same network? Use a code instead.</p>
+      <p><b>Pairing.</b> Open <i>Add a device</i> on one computer and the other appears by itself. Click <i>Pair</i>; the other computer asks right away, showing the same code. Accept. Not on the same network? Use a code instead.</p>
     </td>
   </tr>
   <tr>
@@ -154,9 +154,9 @@ SameDesk creates a **SameDesk** folder in your home folder, adds its icon to the
 
 ## Pair your computers
 
-1. Open SameDesk on both computers and choose **Add a device**.
-2. On one, click **Pair** next to the other computer.
-3. The other computer asks *"MacBook Pro wants to connect"*. Check that both screens show the same six-digit code, then click **Accept**.
+1. On one computer, choose **Add a device**. Your other computer appears as long as SameDesk is running on it and it's on the same network.
+2. Click **Pair** next to it.
+3. The other computer asks straight away, *"MacBook Pro wants to connect"*, opening SameDesk if it isn't on screen. Check that both show the same six-digit code, then click **Accept**.
 
 That's it. From now on they sync by themselves, at home, at the office or across the internet.
 
@@ -195,7 +195,7 @@ flowchart LR
 - **No accounts, no cloud.** Data lives on your computers and nowhere else.
 - **Encrypted end to end.** Devices connect over TLS, and each device's ID is the fingerprint of its own key, so a device can't be impersonated.
 - **You approve every device.** Pairing needs a click on both computers, and a check code derived from both device IDs lets you confirm you're pairing with the right one.
-- **Discovery only while you're pairing.** Your computer announces itself on the local network only while *Add a device* is open.
+- **Discovery only while you're pairing.** Nothing is announced on the local network until someone opens *Add a device*; then the SameDesk computers there answer with their name and device code. A pairing request only opens SameDesk on screen when it comes from a device on the same network that is pairing at that moment.
 - **Relays can't read your data.** When a direct connection isn't possible, Syncthing's community relays pass along encrypted traffic they cannot decrypt.
 - **The dashboard is yours alone.** It answers only this computer's browser, and phones only after scanning the key link shown in Settings.
 
@@ -262,7 +262,7 @@ Pushing a tag such as `v0.1.0` builds every installer on GitHub Actions into a d
 cmd/samedesk/      entry point and flags
 internal/engine/    embedded Syncthing: identity, config, folder, pairing
 internal/hub/       dashboard server: clipboard, notes, files, sync status, per-OS bits
-internal/pairing/   finding nearby devices while "Add a device" is open
+internal/pairing/   finding nearby devices when "Add a device" is open
 internal/tray/      menu bar and tray icon
 internal/autostart/ start at login on each OS
 packaging/          icons, .dmg, Windows installer and Linux packages

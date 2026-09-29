@@ -20,6 +20,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/SyedAliMasoodBukhari/samedesk/internal/engine"
@@ -55,6 +56,9 @@ type Hub struct {
 	clips *store[clipDoc]
 	notes *store[noteDoc]
 	sync  syncCache
+
+	seen     atomic.Int64    // when a visible dashboard on this computer last checked in (unix ms)
+	prompted map[string]bool // pairing requests already brought to the user's attention
 }
 
 // Device is what kind of computer this is. SAMEDESK_DEVICE_KIND overrides it,
@@ -107,6 +111,9 @@ func New(c Config) (*Hub, error) {
 		h.rescan(".samedesk/notes")
 	}
 	h.beacon = pairing.Start(c.Engine.ID.String(), c.Engine.Name(), h.device)
+	h.beacon.SetPort(c.Engine.SyncPort())
+	h.prompted = map[string]bool{}
+	go h.pairWatch()
 	go h.expiryLoop()
 	go h.hideLoop()
 	return h, nil
@@ -245,6 +252,9 @@ func (h *Hub) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(r.URL.Path, "/api/") && r.Header.Get("X-Hub") != "1" {
 		h.writeJSON(w, 403, map[string]string{"error": "Forbidden"})
 		return
+	}
+	if isLoopback(r) && r.Header.Get("X-Visible") == "1" {
+		h.seen.Store(nowMs())
 	}
 	if err := h.route(w, r); err != nil {
 		var he httpError
