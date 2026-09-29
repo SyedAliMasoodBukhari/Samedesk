@@ -4,8 +4,11 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
+	"log/slog"
+	"net"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -117,7 +120,7 @@ func (h *Hub) pairAPI(w http.ResponseWriter, r *http.Request) error {
 				name = s.Name
 			}
 		}
-		if err := h.eng.AddPeer(id, name); err != nil {
+		if err := h.eng.AddPeer(id, name, h.directAddrs(id)...); err != nil {
 			return err
 		}
 		h.invalidateSync()
@@ -135,7 +138,7 @@ func (h *Hub) pairAPI(w http.ResponseWriter, r *http.Request) error {
 				name = pd.Name
 			}
 		}
-		if err := h.eng.AddPeer(id, name); err != nil {
+		if err := h.eng.AddPeer(id, name, h.directAddrs(id)...); err != nil {
 			return err
 		}
 		h.invalidateSync()
@@ -178,4 +181,45 @@ func (h *Hub) invalidateSync() {
 	h.mu.Lock()
 	h.sync = syncCache{}
 	h.mu.Unlock()
+}
+
+// directAddrs is where a device on this network said it accepts connections, so
+// Syncthing can connect at once rather than waiting to discover it.
+func (h *Hub) directAddrs(id protocol.DeviceID) []string {
+	s, ok := h.beacon.Lookup(id.String())
+	if !ok || s.IP == "" || s.Port == 0 {
+		return nil
+	}
+	hp := net.JoinHostPort(s.IP, strconv.Itoa(s.Port))
+	return []string{"tcp://" + hp, "quic://" + hp}
+}
+
+// pairWatch brings a pairing request to the user's attention. When a device on
+// this network that is pairing right now asks to connect, and no SameDesk page
+// is showing, it opens the dashboard on the request: the other person is waiting
+// and the check code has to be compared. Requests from anywhere else only show
+// in the dashboard and the tray menu, so a stranger can't open windows here.
+func (h *Hub) pairWatch() {
+	for range time.Tick(2 * time.Second) {
+		pending := h.pending()
+		still := map[string]bool{}
+		for _, p := range pending {
+			still[p.ID] = true
+		}
+		for id := range h.prompted {
+			if !still[id] { // answered or withdrawn: a new request may prompt again
+				delete(h.prompted, id)
+			}
+		}
+		for _, p := range pending {
+			if h.prompted[p.ID] || !h.beacon.Seeking(p.ID) {
+				continue
+			}
+			h.prompted[p.ID] = true
+			if nowMs()-h.seen.Load() > 8000 {
+				slog.Info("Opening SameDesk for a pairing request", "from", p.Name)
+				OpenBrowser(h.URL() + "/#pair-request")
+			}
+		}
+	}
 }

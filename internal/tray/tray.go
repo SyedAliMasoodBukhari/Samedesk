@@ -11,10 +11,12 @@ import (
 
 	"github.com/SyedAliMasoodBukhari/samedesk/internal/autostart"
 	"github.com/SyedAliMasoodBukhari/samedesk/internal/hub"
+	"github.com/SyedAliMasoodBukhari/samedesk/internal/update"
 )
 
 type Options struct {
 	Hub       *hub.Hub
+	Updates   *update.Updater
 	LoginArgs []string // flags to start with at login, so it comes back the same way
 	OnExit    func()   // stops the dashboard and the sync engine
 }
@@ -45,6 +47,8 @@ func ready(o Options) {
 	status.Disable()
 	request := systray.AddMenuItem("", "Open SameDesk to accept or decline")
 	request.Hide()
+	upgrade := systray.AddMenuItem("", "")
+	upgrade.Hide()
 	systray.AddSeparator()
 	open := systray.AddMenuItem("Open SameDesk", "")
 	folder := systray.AddMenuItem("Open Shared Folder", h.Folder())
@@ -77,6 +81,7 @@ func ready(o Options) {
 		} else {
 			request.Hide()
 		}
+		showUpdate(upgrade, o.Updates)
 	}
 	refresh()
 
@@ -93,6 +98,12 @@ func ready(o Options) {
 				hub.OpenBrowser(h.URL())
 			case <-request.ClickedCh:
 				hub.OpenBrowser(h.URL())
+			case <-upgrade.ClickedCh:
+				if st := o.Updates.Status(); st.State == "manual" && st.Page != "" {
+					hub.OpenBrowser(st.Page)
+				} else {
+					go o.Updates.Install()
+				}
 			case <-folder.ClickedCh:
 				h.OpenFolder()
 			case <-login.ClickedCh:
@@ -112,6 +123,32 @@ func ready(o Options) {
 			}
 		}
 	}()
+}
+
+// showUpdate offers a new version when there's one to act on.
+func showUpdate(item *systray.MenuItem, u *update.Updater) {
+	if u == nil {
+		return
+	}
+	st := u.Status()
+	switch {
+	case !st.Available:
+		item.Hide()
+		return
+	case st.State == "installing":
+		item.SetTitle("Updating to " + st.Latest + "…")
+		item.Disable()
+	case st.State == "downloading":
+		item.SetTitle("Downloading SameDesk " + st.Latest + "…")
+		item.Disable()
+	case st.State == "manual":
+		item.SetTitle("SameDesk " + st.Latest + " is available…")
+		item.Enable()
+	default:
+		item.SetTitle("Update to SameDesk " + st.Latest)
+		item.Enable()
+	}
+	item.Show()
 }
 
 // state is what the status line shows: a word or two and a coloured dot.

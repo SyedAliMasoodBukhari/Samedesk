@@ -49,11 +49,25 @@ jobs:
     needs: [macos, windows-linux]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
       - uses: actions/download-artifact@v4
         with:
           path: dist
           merge-multiple: true
       - run: cd dist && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
+      # The apps only install updates whose checksum list carries this signature.
+      - name: Sign checksums
+        env:
+          SAMEDESK_SIGNING_KEY: ${{ secrets.SAMEDESK_SIGNING_KEY }}
+        run: |
+          if [ -n "$SAMEDESK_SIGNING_KEY" ]; then
+            go run ./tools/sign dist/SHA256SUMS.txt
+          else
+            echo "::warning::SAMEDESK_SIGNING_KEY is not set: this release won't be installed automatically"
+          fi
       - uses: softprops/action-gh-release@v2
         with:
           draft: true

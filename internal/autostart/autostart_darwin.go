@@ -5,6 +5,7 @@ import (
 	"encoding/xml"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const label = "io.github.samedesk"
@@ -12,6 +13,12 @@ const label = "io.github.samedesk"
 func plistPath() string {
 	home, _ := os.UserHomeDir()
 	return filepath.Join(home, "Library", "LaunchAgents", label+".plist")
+}
+
+// installed: running from inside an app bundle, as the .dmg installs it.
+func installed() bool {
+	exe, err := executable()
+	return err == nil && strings.Contains(exe, ".app/Contents/MacOS/")
 }
 
 func Enabled() bool { _, err := os.Stat(plistPath()); return err == nil }
