@@ -120,11 +120,16 @@ func (h *Hub) pairAPI(w http.ResponseWriter, r *http.Request) error {
 				name = s.Name
 			}
 		}
+		// Already one of our devices: say so, and don't let a Cancel remove it.
+		if d, ok := h.eng.Config().Device(id); ok {
+			h.writeJSON(w, 200, map[string]any{"id": id.String(), "name": d.Name, "existing": true})
+			return nil
+		}
 		if err := h.eng.AddPeer(id, name, h.directAddrs(id)...); err != nil {
 			return err
 		}
 		h.invalidateSync()
-		h.writeJSON(w, 200, map[string]string{"id": id.String(), "name": name, "verify": verifyCode(h.eng.ID.String(), id.String())})
+		h.writeJSON(w, 200, map[string]any{"id": id.String(), "name": name, "verify": verifyCode(h.eng.ID.String(), id.String())})
 		return nil
 
 	case p == "/api/pair/accept" && m == http.MethodPost:
