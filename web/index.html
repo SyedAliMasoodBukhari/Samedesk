@@ -388,7 +388,11 @@ kbd{font:500 11px var(--sans);padding:1px 5px;border:1px solid var(--line-2);bor
 .link-anim .dev3d{width:52px;height:52px;display:grid;place-items:center;color:var(--ink-2)}
 .link-anim .dev3d svg{width:30px;height:30px}
 .link-anim .wire{width:70px;height:2px;border-radius:2px;background:repeating-linear-gradient(90deg,var(--line-2) 0 6px,transparent 6px 12px);position:relative;overflow:hidden}
-.link-anim .wire:after{content:"";position:absolute;top:0;left:-30%;width:30%;height:100%;background:var(--accent);border-radius:2px;animation:travel 1.3s ease-in-out infinite}
+.link-anim .wire:after{content:"";position:absolute;top:0;left:-40%;width:40%;height:100%;border-radius:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:travel 1.6s cubic-bezier(.45,0,.35,1) infinite}
+.link-anim:not(.done) .dev3d:last-child{animation:breathe 2.4s ease-in-out infinite}
+.spin{display:inline-block;flex:none;width:11px;height:11px;border-radius:50%;border:1.5px solid var(--accent-line);border-top-color:var(--accent);animation:turn .9s linear infinite;vertical-align:-1px}
+@keyframes turn{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin,.link-anim .wire:after,.link-anim .dev3d{animation:none}}
 .link-anim.done .wire{background:var(--ok)}
 .link-anim.done .wire:after{display:none}
 @keyframes travel{to{left:100%}}
@@ -870,7 +874,7 @@ function devices() {
   const s = syncData, rows = [{name: me.name || me.host, kind: me.host, sub: me.local ? 'This device' : 'Serving this page', cls: online ? 'ok' : 'bad', state: online ? 'Online' : 'Offline'}];
   if (s?.ok) for (const p of s.peers) {
     const seen = p.lastSeen ? `Last seen ${dateTime(Date.parse(p.lastSeen)).replace(/^Today, /, 'today ').replace(/^Yesterday, /, 'yesterday ')}` : 'Not seen yet';
-    const waiting = !p.shared && (p.connected || !p.lastSeen);   // we added it; it hasn't accepted yet
+    const waiting = p.waiting || (!p.shared && (p.connected || !p.lastSeen));   // we asked; it hasn't accepted yet
     rows.push({id: p.id, name: pn(p), kind: p.label, full: osOf(p.label), sub: waiting ? 'Waiting for it to accept' : p.connected ? (p.need ? `Syncing ${p.need} items` : 'Up to date') : `Offline${p.need ? ` · ${p.need} waiting` : ''}`,
                detail: p.connected || waiting ? '' : seen, cls: waiting ? '' : p.connected ? (p.need ? 'busy' : 'ok') : '', state: waiting ? 'Pending' : p.connected ? 'Online' : 'Offline'});
   }
@@ -879,7 +883,9 @@ function devices() {
 }
 function renderDevices() {
   const rows = devices();
-  $('#sideDevices').innerHTML = rows.map(r => `<a class="sdev" href="#settings" title="${esc(r.detail || r.sub)}"><i class="dot ${r.cls}"></i><span><b>${esc(r.name)}</b><small>${esc(r.sub)}</small></span></a>`).join('');
+  keyedRows($('#sideDevices'), rows.map((r, i) => ({key: r.id || 'here-' + i,
+    html: `${r.state === 'Pending' ? '<i class="spin"></i>' : `<i class="dot ${r.cls}"></i>`}<span><b>${esc(r.name)}</b><small>${esc(r.sub)}</small></span>`, title: r.detail || r.sub})),
+    {name: 'sdev', tag: 'a', attrs: key => ({href: '#settings', title: (rows.find((r, i) => (r.id || 'here-' + i) === key) || {}).detail || ''})});
   const [cls] = syncState(); $('#mDot').className = 'dot ' + cls;
   const p = peer();
   const narrow = matchMedia('(max-width:760px)').matches;
@@ -890,9 +896,12 @@ function renderDevices() {
 function renderSettings() {
   const [cls, text] = syncState();
   $('#syncAside').innerHTML = `<i class="dot ${cls}"></i>${esc(text)}`;
-  $('#devRows').innerHTML = devices().map(r => `<div class="devrow"><span class="dev3d">${dev3d(r.kind)}</span><div><b>${esc(r.name)}${r.full && r.full !== r.name ? ` <span style="color:var(--muted);font-weight:400;font-size:12px">${esc(r.full)}</span>` : ''}</b><small>${esc([r.sub, r.detail].filter(Boolean).join(' · '))}</small></div>
-    <span class="state"><i class="dot ${r.cls}"></i>${r.state}</span>${r.id && me.local ? `<button class="icon" data-dev="${esc(r.id)}" data-menu title="More">${I.more}</button>` : ''}</div>`).join('') +
-    (devices().length < 2 ? `<div class="empty" style="padding:22px 16px 26px"><p>Add your other computer to start syncing the clipboard, files and notes.</p><button class="btn primary" style="margin-top:14px" onclick="openPair()">${I.plus}Add a device</button></div>` : '');
+  const drows = devices(), host = $('#devRows');
+  if (!host.querySelector(':scope > .dr-list')) host.innerHTML = '<div class="dr-list"></div><div class="dr-empty"></div>';
+  keyedRows(host.querySelector('.dr-list'), drows.map((r, i) => ({key: r.id || 'here-' + i,
+    html: `<span class="dev3d">${dev3d(r.kind)}</span><div><b>${esc(r.name)}${r.full && r.full !== r.name ? ` <span style="color:var(--muted);font-weight:400;font-size:12px">${esc(r.full)}</span>` : ''}</b><small>${esc([r.sub, r.detail].filter(Boolean).join(' · '))}</small></div>
+    <span class="state">${r.state === 'Pending' ? '<i class="spin"></i>Waiting' : `<i class="dot ${r.cls}"></i>${r.state}`}</span>${r.id && me.local ? `<button class="icon" data-dev="${esc(r.id)}" data-menu title="More">${I.more}</button>` : ''}`})), {name: 'devrow'});
+  setHTML(host.querySelector('.dr-empty'), drows.length < 2 ? `<div class="empty" style="padding:22px 16px 26px"><p>Add your other computer to start syncing the clipboard, files and notes.</p><button class="btn primary" style="margin-top:14px" onclick="openPair()">${I.plus}Add a device</button></div>` : '');
   if (!$('#phoneCard').dataset.done) {
     $('#phoneCard').dataset.done = 1;
     $('#phoneCard').innerHTML = me.link ? `<div class="phone-card"><div class="qr" id="qr"></div>
@@ -920,7 +929,7 @@ $('#devRows').addEventListener('click', e => {
   const p = syncData?.peers?.find(x => x.id === b.dataset.dev); if (!p) return;
   openMenu(b, [{icon: I.trash, label: 'Remove device', danger: true, confirm: {title: `Remove ${pn(p)}?`, action: 'Remove device',
       body: `It stops syncing with this computer. Everything already on ${pn(p)} stays there.`, preview: prevLine(dev3d(p.label), pn(p))},
-    run: async () => { prompted.add(p.id); await post('/api/devices/remove', {id: p.id}); toast(`Removed ${pn(p)}`, I.trash); loadSync(); }}]);
+    run: async () => { prompted.add(p.id); declined.add(p.id); await post('/api/devices/remove', {id: p.id}); toast(`Removed ${pn(p)}`, I.trash); loadSync(); }}]);
 });
 async function loadSync() { try { syncData = await api('/api/sync'); } catch {} renderDevices(); renderHero(); checkPending(); if (clipState.version) { renderHomeClips(); if (page === 'clipboard') renderClips(); } if (page === 'notes' && !noteTimer) renderNotes(); }
 let qrLib;
@@ -1495,47 +1504,77 @@ async function pollPair() {
   } catch {}
   renderPair();
 }
-function nearHTML(st) {
-  if (!st?.available) return `<div class="near-empty"><span class="ghost"></span><span>Finding devices on this network isn't available on this computer. Use a code below.</span></div>`;
-  const list = st.nearby || [], asking = new Set((st.pending || []).map(p => p.id));
-  if (!list.length) return `<div class="near-empty"><span class="ghost"></span><span>Open SameDesk on your other computer, on the same network. It appears here by itself.</span></div>`;
-  return `<div class="near">${list.map(n => `<div class="near-i"><span class="dev3d">${dev3d(n.os)}</span><div style="flex:1;min-width:0"><b>${esc(n.name)}</b><small>${esc([n.os, n.addr].filter(Boolean).join(' · '))}</small></div>
-    ${n.paired ? `<span style="color:var(--ok);font-size:12.5px;display:flex;gap:5px;align-items:center">${I.check}Paired</span>`
-      : asking.has(n.id) ? `<span style="color:var(--ink-3);font-size:12.5px">Asking to pair…</span>`
-      : `<button class="btn primary" data-pair="${esc(n.id)}">Pair</button>`}</div>`).join('')}</div>`;
+// Lists that refresh while you look at them (nearby devices, your devices) keep
+// one element per item, keyed by device, and only touch an item whose content
+// changed: nothing jumps, animations keep running, hover and focus stay put.
+function keyedRows(list, items, cls) {
+  const keep = new Set();
+  items.forEach(({key, html}, i) => {
+    keep.add(key);
+    let row = [...list.children].find(r => r.dataset.key === key);
+    if (!row) { row = document.createElement(cls.tag || 'div'); row.className = cls.name; row.dataset.key = key; }
+    if (row._html !== html) { row.innerHTML = html; row._html = html; }
+    if (cls.attrs) for (const [k, v] of Object.entries(cls.attrs(key))) row.setAttribute(k, v);
+    if (list.children[i] !== row) list.insertBefore(row, list.children[i] || null);
+  });
+  [...list.children].forEach(r => { if (!keep.has(r.dataset.key)) r.remove(); });
 }
+function setHTML(el, html) { if (el && el._html !== html) { el.innerHTML = html; el._html = html; } }
+
+function renderNear(host, st) {
+  const empty = !st?.available ? "Finding devices on this network isn't available on this computer. Use a code below."
+    : !(st.nearby || []).length ? 'Open SameDesk on your other computer, on the same network. It appears here by itself.' : '';
+  if (empty) return setHTML(host, `<div class="near-empty"><span class="ghost"></span><span>${empty}</span></div>`);
+  let list = host.querySelector(':scope > .near');
+  if (!list) { host.innerHTML = '<div class="near"></div>'; host._html = null; list = host.firstChild; }
+  const asking = new Set(Object.keys(recentAsks(st.pending)));
+  keyedRows(list, st.nearby.map(n => ({key: n.id, html: `<span class="dev3d">${dev3d(n.os)}</span><div style="flex:1;min-width:0"><b>${esc(n.name)}</b><small>${esc([n.os, n.addr].filter(Boolean).join(' · '))}</small></div>
+    ${n.paired ? `<span style="color:var(--ok);font-size:12.5px;display:flex;gap:5px;align-items:center">${I.check}Paired</span>`
+      : asking.has(n.id) ? `<span style="color:var(--ink-3);font-size:12.5px;margin-right:10px">Wants to pair</span><button class="btn primary" data-accept="${esc(n.id)}">Accept</button>`
+      : `<button class="btn primary" data-pair="${esc(n.id)}">Pair</button>`}`})), {name: 'near-i'});
+}
+// The sheet is built once per screen; polling only updates what changed in it.
 function renderPair() {
   if (!pairUI) return;
   const box = pairUI.el.querySelector('.pair'), st = pairUI.st, t = pairUI.target;
   if (pairUI.step === 'find') {
-    const focused = document.activeElement?.id === 'pairCode', val = $('#pairCode')?.value || '';
-    box.innerHTML = `<div class="pair-h"><div style="flex:1"><h3 id="pairT">Add a device</h3><p>Pair another computer once. After that, everything syncs by itself.</p></div><button class="icon" data-x title="Close">${I.x}</button></div>
+    if (box.dataset.view !== 'find') {
+      box.dataset.view = 'find';
+      box.innerHTML = `<div class="pair-h"><div style="flex:1"><h3 id="pairT">Add a device</h3><p>Pair another computer once. After that, everything syncs by itself.</p></div><button class="icon" data-x title="Close">${I.x}</button></div>
       <div class="pair-b">
         <div class="pair-label"><span class="pulse"></span>On this network</div>
-        ${nearHTML(st)}
+        <div id="nearHost"></div>
         <div class="or">Or connect with a code</div>
         <div class="pair-label" style="margin-top:0">This device's code</div>
-        <div class="codebox"><code>${esc(st?.me?.id || '…')}</code><button class="btn" data-copy>${I.copy}Copy</button></div>
+        <div class="codebox"><code id="myCode"></code><button class="btn" data-copy>${I.copy}Copy</button></div>
         <div class="paste"><input id="pairCode" placeholder="Paste the other device's code" autocomplete="off" spellcheck="false"><button class="btn primary" data-connect>Connect</button></div>
-        ${pairUI.err ? `<div class="pair-err">${esc(pairUI.err)}</div>` : ''}
+        <div id="pairErr"></div>
       </div>`;
-    const inp = $('#pairCode'); inp.value = val; if (focused) { inp.focus(); inp.setSelectionRange(val.length, val.length); }
-    inp.onkeydown = e => { if (e.key === 'Enter') box.querySelector('[data-connect]').click(); };
+      $('#pairCode').onkeydown = e => { if (e.key === 'Enter') box.querySelector('[data-connect]').click(); };
+    }
+    renderNear($('#nearHost'), st);
+    const code = st?.me?.id || '…';
+    if ($('#myCode').textContent !== code) $('#myCode').textContent = code;
+    setHTML($('#pairErr'), pairUI.err ? `<div class="pair-err">${esc(pairUI.err)}</div>` : '');
   } else {
     const done = pairUI.step === 'done', name = t.label || t.name || 'the other device';
+    const view = `${pairUI.step}|${t.id}|${name}|${t.os || ''}`;
+    if (box.dataset.view === view) return;
+    box.dataset.view = view;
     box.innerHTML = `<div class="pair-h"><div style="flex:1"><h3 id="pairT">${done ? "You're connected" : 'Waiting for ' + esc(name)}</h3></div><button class="icon" data-x title="Close">${I.x}</button></div>
       <div class="pair-b"><div class="wait">
         <div class="link-anim${done ? ' done' : ''}"><span class="dev3d">${dev3d(me.host)}</span><span class="wire"></span><span class="dev3d">${dev3d(osOf(t.os) || osOf(t.label))}</span></div>
         ${done ? `<h4>${esc(pairUI.st?.me?.name || me.host)} and ${esc(name)} are paired</h4><p>Clipboard, files and notes now sync between them, on this network or over the internet.</p>`
-          : `<h4>Accept the request on ${esc(name)}</h4><p>Check that it shows the same code:</p><div class="verify">${esc(t.verify)}</div><p style="font-size:12px">If the codes don't match, cancel.</p>`}
+          : `<h4>Now accept on ${esc(name)}</h4><p>SameDesk there asks you to, showing this code. Check that they match:</p><div class="verify">${esc(t.verify)}</div><p style="font-size:12px;display:flex;gap:7px;align-items:center;justify-content:center"><i class="spin"></i>Waiting for ${esc(name)}…</p>`}
       </div>
       <div class="pair-f">${done ? `<button class="btn primary lg" data-x>Done</button>` : `<button class="btn lg" data-cancel>Cancel</button>`}</div></div>`;
   }
 }
 document.addEventListener('click', async e => {
   if (!pairUI || !e.target.closest('.pair')) return;
-  const el = e.target.closest('[data-x],[data-copy],[data-connect],[data-pair],[data-cancel]'); if (!el) return;
+  const el = e.target.closest('[data-x],[data-copy],[data-connect],[data-pair],[data-cancel],[data-accept]'); if (!el) return;
   if (el.hasAttribute('data-x')) return closePair();
+  if (el.hasAttribute('data-accept')) { const p = recentAsks(pairUI.st?.pending)[el.dataset.accept]; if (p && !dlgOpen) { prompted.add(p.id); answerRequest(p); } return; }
   if (el.hasAttribute('data-copy')) { if (await copyText(pairUI.st?.me?.id || '')) flashButton(el, 'Copied'); return; }
   if (el.hasAttribute('data-cancel')) { const id = pairUI.target?.id; pairUI.step = 'find'; pairUI.target = null; renderPair(); if (id) post('/api/devices/remove', {id}).catch(() => {}); return; }
   const id = el.dataset.pair || $('#pairCode')?.value.trim();
@@ -1580,12 +1619,32 @@ $('#updBody').addEventListener('click', async e => {
 });
 
 // A device asking to connect: show who it is and the check code; the user decides.
-const prompted = new Set();
+// A request blinks out while the other side reconnects; remember each for a few
+// seconds so its row keeps its Accept button instead of flickering to Pair.
+const asks = {};
+function recentAsks(pending = []) {
+  const now = Date.now();
+  for (const p of pending) asks[p.id] = {p, at: now};
+  const out = {};
+  for (const [id, a] of Object.entries(asks)) { if (now - a.at < 10000) out[id] = a.p; else delete asks[id]; }
+  return out;
+}
+
+// Each request is asked about once. One that's withdrawn or answered may ask again
+// later (say, after a device is removed and paired again); a declined one waits
+// for its Accept button in Add a device, so it can't nag.
+const prompted = new Set(), declined = new Set();
 async function checkPending(from = syncData?.pending) {
+  const waiting = new Set((from || []).map(p => p.id));
+  for (const id of prompted) if (!waiting.has(id) && !declined.has(id)) prompted.delete(id);
   const list = (from || []).filter(p => !prompted.has(p.id));
   if (!list.length || !me.local || dlgOpen) return;
   const p = list[0]; prompted.add(p.id);
+  answerRequest(p);
+}
+async function answerRequest(p) {
   const ok = await requestDialog(p);
+  if (ok) declined.delete(p.id); else declined.add(p.id);
   try {
     await post(ok ? '/api/pair/accept' : '/api/pair/decline', {id: p.id});
     if (ok) { toast(`Connected to ${p.name || 'your device'}`); if (pairUI) { pairUI.step = 'done'; pairUI.target = {id: p.id, name: p.name, verify: p.verify}; renderPair(); } }

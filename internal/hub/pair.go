@@ -3,11 +3,14 @@ package hub
 import (
 	"crypto/sha256"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -128,6 +131,7 @@ func (h *Hub) pairAPI(w http.ResponseWriter, r *http.Request) error {
 		if err := h.eng.AddPeer(id, name, h.directAddrs(id)...); err != nil {
 			return err
 		}
+		h.setAwaiting(id.String(), true)
 		h.invalidateSync()
 		h.writeJSON(w, 200, map[string]any{"id": id.String(), "name": name, "verify": verifyCode(h.eng.ID.String(), id.String())})
 		return nil
@@ -161,9 +165,13 @@ func (h *Hub) pairAPI(w http.ResponseWriter, r *http.Request) error {
 		if err != nil {
 			return err
 		}
+		if id == h.eng.ID {
+			return badRequest("That's this computer. Remove other devices, not this one.")
+		}
 		if err := h.eng.RemovePeer(id); err != nil {
 			return err
 		}
+		h.setAwaiting(id.String(), false)
 		h.dropPending(id) // don't immediately ask again about a device we just removed
 		h.invalidateSync()
 
@@ -226,5 +234,48 @@ func (h *Hub) pairWatch() {
 				OpenBrowser(h.URL() + "/#pair-request")
 			}
 		}
+	}
+}
+
+// Devices this computer asked to pair with that haven't accepted yet. Until a
+// device accepts, it refuses our connections, which looks just like being
+// offline; remembering the request lets the dashboard say "Waiting for it to
+// accept" instead. Kept in the settings folder, so it survives a restart.
+func (h *Hub) awaitFile() string { return filepath.Join(h.local, "awaiting.json") }
+
+func (h *Hub) loadAwaiting() map[string]int64 {
+	m := map[string]int64{}
+	if b, err := os.ReadFile(h.awaitFile()); err == nil {
+		_ = json.Unmarshal(b, &m)
+	}
+	return m
+}
+
+func (h *Hub) setAwaiting(id string, on bool) {
+	h.awaitMu.Lock()
+	defer h.awaitMu.Unlock()
+	m := h.loadAwaiting()
+	if _, had := m[id]; had == on {
+		return
+	}
+	if on {
+		m[id] = nowMs()
+	} else {
+		delete(m, id)
+	}
+	b, _ := json.Marshal(m)
+	_ = os.WriteFile(h.awaitFile(), b, 0o600)
+}
+
+func (h *Hub) awaiting(id string) bool {
+	h.awaitMu.Lock()
+	defer h.awaitMu.Unlock()
+	_, ok := h.loadAwaiting()[id]
+	return ok
+}
+
+func (h *Hub) accepted(id string) {
+	if h.awaiting(id) {
+		h.setAwaiting(id, false)
 	}
 }
