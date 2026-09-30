@@ -62,6 +62,7 @@ type Hub struct {
 
 	seen     atomic.Int64    // when a visible dashboard on this computer last checked in (unix ms)
 	prompted map[string]bool // pairing requests already brought to the user's attention
+	awaitMu  sync.Mutex      // guards awaiting.json
 }
 
 // Device is what kind of computer this is. SAMEDESK_DEVICE_KIND overrides it,

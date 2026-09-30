@@ -205,8 +205,12 @@ func (e *Engine) SyncPort() int {
 	return 0
 }
 
-// RemovePeer stops sharing with a device and forgets it.
+// RemovePeer stops sharing with a device and forgets it. This computer itself
+// can't be removed: that would wipe its own identity from the sync settings.
 func (e *Engine) RemovePeer(id protocol.DeviceID) error {
+	if id == e.ID {
+		return fmt.Errorf("can't remove this device itself")
+	}
 	w, err := e.cfg.Modify(func(c *config.Configuration) {
 		if f, _, ok := c.Folder(e.FolderID); ok {
 			kept := f.Devices[:0]

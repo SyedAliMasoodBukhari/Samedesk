@@ -18,7 +18,8 @@ type Peer struct {
 	Name      string  `json:"name"`
 	Label     string  `json:"label"`
 	Connected bool    `json:"connected"`
-	Shared    bool    `json:"shared"` // the other side accepted and shares the folder
+	Shared    bool    `json:"shared"`  // the other side accepted and shares the folder
+	Waiting   bool    `json:"waiting"` // we asked to pair and it hasn't accepted yet
 	Need      int     `json:"need"`
 	LastSeen  *string `json:"lastSeen"`
 }
@@ -170,6 +171,10 @@ func (h *Hub) fetchStatus(who map[string]identity) (SyncStatus, error) {
 			Shared: comp.RemoteState == "valid"}
 		if seen := stats[pid].LastSeen; seen != "" && !strings.HasPrefix(seen, "1970") {
 			p.LastSeen = &seen
+		}
+		p.Waiting = !p.Shared && h.awaiting(pid)
+		if p.Shared {
+			h.accepted(pid)
 		}
 		peers = append(peers, p)
 	}
