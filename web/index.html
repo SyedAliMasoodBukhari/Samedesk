@@ -1543,6 +1543,7 @@ document.addEventListener('click', async e => {
   try {
     const r = await post('/api/pair/connect', {id});
     const n = (pairUI.st?.nearby || []).find(x => x.id === r.id);
+    if (r.existing) { pairUI.err = `${r.name || 'That device'} is already paired with this computer.`; return renderPair(); }
     pairUI.err = ''; pairUI.step = 'wait'; pairUI.target = {id: r.id, name: r.name || n?.name, os: n?.os, verify: r.verify};
     renderPair();
   } catch (err) { pairUI.err = err.message; renderPair(); }

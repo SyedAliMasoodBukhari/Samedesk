@@ -3,8 +3,9 @@ TAGS    := noassets
 VERSION ?= 0.1.0
 LDFLAGS := -s -w -X main.version=$(VERSION)
 FLAGS   := -tags $(TAGS) -trimpath -ldflags="$(LDFLAGS)"
-# Windows: a tray app, so no console window.
-WINFLAGS := -tags $(TAGS) -trimpath -ldflags="$(LDFLAGS) -H=windowsgui"
+# Windows: a tray app, so no console window. Symbols are kept (no -s -w): stripped
+# Go programs are a common trigger for antivirus false positives.
+WINFLAGS := -tags $(TAGS) -trimpath -ldflags="-X main.version=$(VERSION) -H=windowsgui"
 PKG     := ./cmd/samedesk
 
 # Packaging tools, pinned and run through the Go toolchain.

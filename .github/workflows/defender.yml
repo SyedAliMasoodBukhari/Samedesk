@@ -1,0 +1,44 @@
+# Scans the Windows build with Microsoft Defender's signatures, to catch false
+# positives before a release reaches people's PCs. (Defender's cloud checks,
+# which only run on real PCs, can still disagree.)
+name: Defender scan
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Update Defender
+        shell: pwsh
+        run: |
+          Update-MpSignature -ErrorAction Continue
+          Get-MpComputerStatus | Format-List AMServiceEnabled,AntivirusEnabled,RealTimeProtectionEnabled,AntivirusSignatureVersion,AntivirusSignatureLastUpdated
+      - name: Build
+        shell: bash
+        run: |
+          mkdir -p scan
+          go run github.com/tc-hib/go-winres@v0.3.3 simply --arch amd64 --out cmd/samedesk/rsrc --manifest gui \
+            --icon packaging/icons/samedesk.ico --product-name SameDesk --file-description SameDesk \
+            --product-version 0.1.3 --file-version 0.1.3 --original-filename SameDesk.exe --copyright "The SameDesk authors, MIT licence"
+          export CGO_ENABLED=0 GOOS=windows GOARCH=amd64
+          go build -tags noassets -trimpath -ldflags="-H=windowsgui" -o scan/SameDesk.exe ./cmd/samedesk
+      - name: Scan
+        shell: pwsh
+        run: |
+          $mp = "$env:ProgramFiles\Windows Defender\MpCmdRun.exe"
+          foreach ($f in Get-ChildItem scan\*.exe) {
+            $out = & $mp -Scan -ScanType 3 -File $f.FullName -DisableRemediation 2>&1 | Out-String
+            $threat = ($out -split "`n" | Where-Object { $_ -match 'Threat\s*:' }) -join '; '
+            if ($LASTEXITCODE -eq 2) { Write-Output "::error::Defender flags $($f.Name): $threat"; $bad = $true } else { Write-Output "clean    $($f.Name)" }
+          }
+          if ($bad) { exit 1 }

@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"syscall"
 )
 
 func assetName(v string) string {
@@ -27,10 +26,8 @@ func selfUpdatable() bool {
 // apply runs the new installer silently. It waits for this copy to quit,
 // replaces it and starts the new version (/RELAUNCH).
 func apply(setup string, args []string) error {
-	cmd := exec.Command(setup, "/S", "/RELAUNCH")
-	const detached, newGroup = 0x00000008, 0x00000200 // DETACHED_PROCESS, CREATE_NEW_PROCESS_GROUP
-	cmd.SysProcAttr = &syscall.SysProcAttr{CreationFlags: detached | newGroup, HideWindow: true}
-	return cmd.Start()
+	// A plain start: the installer outlives this copy on its own.
+	return exec.Command(setup, "/S", "/RELAUNCH").Start()
 }
 
 func cleanupOld() {}
