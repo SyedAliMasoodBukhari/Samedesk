@@ -1,19 +1,12 @@
 <p align="center">
-  <img src="docs/images/logo.svg" width="76" height="76" alt="SameDesk">
-</p>
-
-<h1 align="center">SameDesk</h1>
-
-<p align="center">
-  <b>One clipboard, one folder and one set of notes across every computer you use.</b><br>
-  Private, peer to peer, and nothing to set up.
+  <img src=".github/assets/banner.svg" width="100%" alt="SameDesk — one clipboard, one folder and one set of notes across every computer you use. Private, peer to peer, and nothing to set up.">
 </p>
 
 <p align="center">
-  <img alt="Platforms" src="https://img.shields.io/badge/macOS%20·%20Windows%20·%20Linux-111418?style=flat-square">
-  <img alt="Licence" src="https://img.shields.io/badge/licence-MIT-418fcc?style=flat-square&labelColor=111418">
-  <img alt="Sync engine" src="https://img.shields.io/badge/sync-Syncthing%202.1.5-418fcc?style=flat-square&labelColor=111418">
-  <img alt="Built with Go" src="https://img.shields.io/badge/built%20with-Go-418fcc?style=flat-square&labelColor=111418">
+  <img alt="platforms" src="https://img.shields.io/badge/platforms-macOS%20·%20Windows%20·%20Linux-0B788E?style=flat-square&labelColor=131615">
+  <img alt="licence" src="https://img.shields.io/badge/licence-MIT-0B788E?style=flat-square&labelColor=131615">
+  <img alt="sync" src="https://img.shields.io/badge/sync-Syncthing%202.1.5-0B788E?style=flat-square&labelColor=131615">
+  <img alt="built with" src="https://img.shields.io/badge/built%20with-Go-0B788E?style=flat-square&labelColor=131615">
 </p>
 
 <p align="center">
@@ -302,3 +295,9 @@ Issues and pull requests are welcome. Run `make test` before sending a change, a
 SameDesk is released under the [MIT licence](LICENSE).
 
 It stands on [Syncthing](https://syncthing.net) (Mozilla Public License 2.0), included unmodified, and uses [Microsoft Fluent Emoji](https://github.com/microsoft/fluentui-emoji) (MIT) for its 3D icons. See [NOTICE](NOTICE) for details. "Syncthing" is a trademark of the Syncthing Foundation; SameDesk is an independent project and is not affiliated with it.
+
+<br>
+
+<p align="center">
+  <a href="https://www.kolonx.com"><img src="https://raw.githubusercontent.com/SyedAliMasoodBukhari/SyedAliMasoodBukhari/main/assets/repo-footer.svg" width="100%" alt="Crafted by Syed Ali Masood, founder of KolonX"></a>
+</p>
